@@ -300,7 +300,7 @@ yielded/
 
 ## Release Process
 
-Releases are managed by project maintainers. The process includes:
+Releases are managed by project maintainers. Since `main` and `release/*` branches are protected and require PRs, follow this workflow:
 
 ### Prerequisites
 
@@ -312,48 +312,75 @@ Releases are managed by project maintainers. The process includes:
 
 ### Publishing Steps
 
-1. **Ensure all tests pass**:
+1. **Create a release branch** from main:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b release/vX.Y.Z
+   ```
+
+2. **Ensure all tests pass**:
    ```bash
    npm run lint
    npm run prettier
    npm run validate
    npm test
+   npm run build
    ```
 
-2. **Update version in `package.json`**:
+3. **Update version in `package.json`**:
    ```bash
    # For patch releases (bug fixes)
-   npm version patch
+   npm version patch --no-git-tag-version
    
    # For minor releases (new features, backward compatible)
-   npm version minor
+   npm version minor --no-git-tag-version
    
    # For major releases (breaking changes)
-   npm version major
+   npm version major --no-git-tag-version
    ```
+   Note: We use `--no-git-tag-version` to prevent automatic tagging; tags are created after merge.
 
-3. **Update CHANGELOG.md** with release notes describing changes
+4. **Update CHANGELOG.md** with release notes describing changes
 
-4. **Commit version bump and changelog**:
+5. **Commit version bump and changelog**:
    ```bash
    git add package.json package-lock.json CHANGELOG.md
    git commit -m "Release vX.Y.Z"
-   git tag vX.Y.Z
+   git push origin release/vX.Y.Z
    ```
 
-5. **Build and publish to npm**:
+6. **Create a Pull Request**:
+   - Go to https://github.com/jEnbuska/yielded/pulls
+   - Create PR from `release/vX.Y.Z` to `main`
+   - Title: "Release vX.Y.Z"
+   - Description: Include CHANGELOG content for this release
+   - Get approval and merge the PR
+
+7. **After PR is merged, create git tag and publish**:
    ```bash
+   git checkout main
+   git pull origin main
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   
+   # Publish to npm
    npm publish
    ```
    Note: The `prepublishOnly` script will automatically build the package before publishing.
 
-6. **Push changes and tags to GitHub**:
-   ```bash
-   git push origin main
-   git push origin vX.Y.Z
-   ```
+8. **Create GitHub release**:
+   - Go to https://github.com/jEnbuska/yielded/releases/new
+   - Select tag `vX.Y.Z`
+   - Title: "vX.Y.Z"
+   - Description: Include CHANGELOG content
+   - Publish release
 
-7. **Create GitHub release** with release notes at https://github.com/jEnbuska/yielded/releases/new
+9. **Clean up** (optional):
+   ```bash
+   git branch -d release/vX.Y.Z
+   git push origin --delete release/vX.Y.Z
+   ```
 
 ### What Gets Published
 
