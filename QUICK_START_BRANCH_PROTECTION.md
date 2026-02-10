@@ -33,19 +33,28 @@
    - ✅ Require a pull request before merging
    - ✅ Require approvals: **1**
    - ✅ Dismiss stale pull request approvals when new commits are pushed
-   - ✅ **Require status checks to pass before merging**
-     - Select: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
-     - (These appear after the first CI workflow run)
+   - ⚠️ **Require status checks** - OPTIONAL (CI is manual)
+     - **Note:** CI uses manual triggers to save costs
+     - Status checks won't automatically block PRs
+     - If you want blocking: manually trigger CI, then select the checks
    - ✅ Do not allow bypassing the above settings
    - Click "Create" or "Save changes"
 
 4. Click "Add branch protection rule" again
 5. For `release-*` branches:
    - Branch name pattern: `release-*`
-   - Apply the same settings as above (including status checks)
+   - Apply the same settings as above
    - Click "Create" or "Save changes"
 
-**Detailed Instructions:** See `BRANCH_PROTECTION_SETUP.md` for complete guide with screenshots descriptions.
+**Important:** With manual CI triggers, you must remember to run checks before merging!
+
+**How to Run CI Manually:**
+1. Go to Actions → CI → Run workflow
+2. Select branch to test
+3. Click "Run workflow"
+4. Wait for all checks to pass before merging PR
+
+**Detailed Instructions:** See `BRANCH_PROTECTION_SETUP.md` for complete guide.
 
 ## What This Achieves
 
@@ -56,14 +65,16 @@ Once branch protection is enabled:
 - All changes must go through a Pull Request
 - You must approve PRs before they can be merged
 - If new commits are pushed after approval, you must re-approve
-- **All CI checks must pass:**
+- **CI checks must be run manually before merging:**
   - TypeScript Validation (`npm run validate`)
   - ESLint (`npm run lint`)
   - Prettier Format Check (`npm run prettier`)
   - Test Suite (`npm run test`)
+  - ⚠️ **Important:** Checks are NOT automatic - you must trigger them!
 
 ✅ **release-* branches:**
-- Same protection as main (including CI checks)
+- Same protection as main
+- CI checks must also be manually triggered
 - Applies to: release-v1.0.0, release-2024-02-10, etc.
 
 ❌ **What won't work anymore:**

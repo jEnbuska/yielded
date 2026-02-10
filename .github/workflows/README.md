@@ -2,11 +2,11 @@
 
 ## CI Workflow (`ci.yml`)
 
-This workflow runs automated checks on every pull request and push to protected branches (`main` and `release-*`).
+This workflow runs automated quality checks **manually on-demand** to reduce unnecessary CI costs.
 
 ### Checks Performed
 
-The workflow runs four parallel jobs that must all pass before a PR can be merged:
+The workflow runs four parallel jobs when manually triggered:
 
 1. **TypeScript Validation** - Runs `npm run validate`
    - Ensures TypeScript compiles without errors
@@ -25,30 +25,35 @@ The workflow runs four parallel jobs that must all pass before a PR can be merge
    - Executes all unit and integration tests
    - Ensures no regressions are introduced
 
-### When It Runs
+### How to Trigger the Workflow
 
-The CI workflow is triggered on:
-- Pull requests targeting `main` or `release-*` branches
-- Direct pushes to `main` or `release-*` branches (after branch protection is enabled, this will only happen via merged PRs)
+The CI workflow uses **manual trigger only** (`workflow_dispatch`) to avoid unnecessary costs.
 
-### Branch Protection
+**To run the workflow:**
 
-To enforce these checks as requirements for merging:
+1. Go to the **Actions** tab in the GitHub repository: https://github.com/jEnbuska/yielded/actions
+2. Click on **CI** workflow in the left sidebar
+3. Click the **Run workflow** button (top right)
+4. Select the branch you want to test
+5. Optionally add a reason for the run
+6. Click **Run workflow**
 
-1. Go to **Settings → Branches** in the GitHub repository
-2. Add or edit the branch protection rule for `main` and `release-*`
-3. Enable **"Require status checks to pass before merging"**
-4. Search for and select all four status checks:
-   - `TypeScript Validation`
-   - `ESLint`
-   - `Prettier Format Check`
-   - `Test Suite`
+**Only repository collaborators with write access can trigger the workflow.**
 
-See `BRANCH_PROTECTION_SETUP.md` in the repository root for detailed instructions.
+### When to Run
 
-### Local Testing
+Run the CI workflow:
+- ✅ Before creating a pull request
+- ✅ After making significant changes
+- ✅ Before merging a PR to ensure all checks pass
+- ✅ After resolving merge conflicts
+- ✅ When explicitly requested in PR reviews
 
-Before pushing code, you can run these checks locally:
+### Local Testing (Recommended)
+
+**Since the workflow is now manual, it's important to run checks locally before pushing.**
+
+Run these checks locally:
 
 ```bash
 npm run validate  # TypeScript check
@@ -63,10 +68,20 @@ Or run them all at once:
 npm run validate && npm run lint && npm run prettier && npm run test
 ```
 
+### Branch Protection Note
+
+**Important:** With manual workflow triggers, status checks will NOT automatically block PRs. 
+
+- The workflow must be manually triggered for each branch you want to test
+- After running, check the Actions tab to verify all jobs passed
+- Only merge PRs after confirming all checks have passed
+
+If you want automatic blocking, you would need to revert to automatic triggers, but this will incur CI costs on every push.
+
 ### Troubleshooting
 
-**Issue:** Status checks don't appear in branch protection settings
-- **Solution:** The checks will only appear after the workflow runs at least once. Create a test PR to trigger the workflow, then the checks will be available in the branch protection settings.
+**Issue:** Can't find the "Run workflow" button
+- **Solution:** Only repository collaborators with write access can manually trigger workflows. Ensure you're logged in and have the necessary permissions.
 
 **Issue:** Workflow fails with permission errors
 - **Solution:** Ensure the repository has GitHub Actions enabled in Settings → Actions → General.

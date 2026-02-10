@@ -1,14 +1,12 @@
 name: CI
 
 on:
-  pull_request:
-    branches:
-      - main
-      - 'release-*'
-  push:
-    branches:
-      - main
-      - 'release-*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for running CI checks'
+        required: false
+        default: 'Manual trigger'
 
 jobs:
   validate:

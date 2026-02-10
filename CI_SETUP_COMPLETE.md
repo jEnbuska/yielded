@@ -1,98 +1,94 @@
-# CI Setup Complete - Next Steps
+# CI Setup Complete - Manual Trigger Mode
 
 ## ✅ What Has Been Done
 
-GitHub Actions CI workflow has been successfully created and committed. The workflow will:
+GitHub Actions CI workflow has been successfully created and committed. The workflow:
 
-1. **Run automatically** on every PR to `main` or `release-*` branches
-2. **Execute 4 required checks** in parallel:
+1. **Runs MANUALLY on-demand** to reduce unnecessary CI costs
+2. **Executes 4 quality checks** in parallel when triggered:
    - ✅ TypeScript Validation (`npm run validate`)
    - ✅ ESLint (`npm run lint`)
    - ✅ Prettier Format Check (`npm run prettier`)
    - ✅ Test Suite (`npm run test`)
 
-## 📋 What You Need to Do
+## 🎮 How to Trigger the Workflow
 
-### Step 1: Merge This PR
+**Only you (repository owner) can manually trigger the workflow:**
 
-1. Go to https://github.com/jEnbuska/yielded/pull/1
-2. Review and approve the changes
-3. Merge the PR to `main`
+1. Go to **Actions** tab: https://github.com/jEnbuska/yielded/actions
+2. Click on **CI** workflow in the left sidebar
+3. Click **Run workflow** button (top right)
+4. Select the branch to test
+5. Optionally add a reason
+6. Click **Run workflow**
 
-### Step 2: Wait for First Workflow Run
+## 📋 Recommended Workflow
 
-After merging, the CI workflow will run automatically. This first run is necessary for the status checks to appear in GitHub's branch protection settings.
+### Before Creating a PR:
+1. **Run checks locally** (recommended):
+   ```bash
+   npm run validate && npm run lint && npm run prettier && npm run test
+   ```
 
-You can monitor the workflow run at:
-- https://github.com/jEnbuska/yielded/actions
+2. **Or trigger CI manually** for the branch:
+   - Go to Actions → CI → Run workflow
+   - Select your branch
+   - Click "Run workflow"
 
-### Step 3: Enable Required Status Checks (5 minutes)
+### Before Merging a PR:
+1. Manually trigger the CI workflow for the PR branch
+2. Wait for all 4 checks to complete
+3. Verify all checks passed (green checkmarks)
+4. Only then approve and merge the PR
 
-Once the workflow has run at least once:
+## ⚠️ Important Notes
 
-1. **Go to Repository Settings**
-   - Navigate to https://github.com/jEnbuska/yielded/settings/branches
+### No Automatic Branch Protection
+- **Status checks do NOT automatically block PRs** with manual triggers
+- You must manually verify that CI passed before merging
+- This is intentional to reduce costs
 
-2. **Edit Branch Protection Rule for `main`**
-   - Click "Edit" on the existing `main` branch protection rule
-   - Scroll to "Require status checks to pass before merging"
-   - ☑️ **Check** "Require status checks to pass before merging"
-   - ☑️ **Check** "Require branches to be up to date before merging" (recommended)
-   - In the search box, you should now see 4 checks available:
-     - Search for and select: `TypeScript Validation`
-     - Search for and select: `ESLint`
-     - Search for and select: `Prettier Format Check`
-     - Search for and select: `Test Suite`
-   - Click "Save changes"
+### Cost Savings
+- ✅ Workflow only runs when you explicitly trigger it
+- ✅ No automatic runs on every push/commit
+- ✅ You control exactly when CI runs
+- ✅ Significant reduction in GitHub Actions minutes used
 
-3. **Repeat for `release-*` Pattern**
-   - Click "Edit" on the `release-*` branch protection rule
-   - Apply the exact same status check settings
-   - Click "Save changes"
+## 🔧 Running Checks Locally (Recommended)
 
-## 🎯 Expected Behavior After Setup
-
-### ✅ PRs Will Be Blocked If:
-- TypeScript compilation fails
-- ESLint finds any warnings or errors
-- Code is not properly formatted
-- Any test fails
-- **Even you (as admin) cannot bypass these checks** if "Do not allow bypassing" is enabled
-
-### ✅ Clear Feedback:
-- Each check shows as a separate status on PRs
-- Failing checks display error messages
-- You can click on failed checks to see detailed logs
-
-### 🧪 Testing the Setup
-
-After enabling status checks, test that they work:
-
-1. Create a test branch
-2. Make a change that breaks one of the checks (e.g., add a TypeScript error)
-3. Push and create a PR
-4. Verify that:
-   - The CI runs automatically
-   - The failing check blocks the merge
-   - The error is clearly shown
-5. Fix the issue, push again
-6. Verify the check passes and merge becomes available
-
-## 📚 Documentation
-
-All CI details are documented in:
-- `.github/workflows/README.md` - Workflow documentation
-- `.github/workflows/ci.yml` - The actual workflow definition
-- `BRANCH_PROTECTION_SETUP.md` - Complete branch protection guide
-- `QUICK_START_BRANCH_PROTECTION.md` - Quick reference guide
-
-## 🔧 Running Checks Locally
-
-Before pushing, developers can run checks locally:
+Since the workflow is manual, **always run checks locally first:**
 
 ```bash
 # Run individual checks
 npm run validate  # TypeScript
+npm run lint      # ESLint
+npm run prettier  # Prettier
+npm run test      # Tests
+
+# Or run all at once
+npm run validate && npm run lint && npm run prettier && npm run test
+```
+
+## 📚 Documentation
+
+All CI details are documented in:
+- `.github/workflows/README.md` - Workflow documentation with manual trigger instructions
+- `.github/workflows/ci.yml` - The actual workflow definition
+- `BRANCH_PROTECTION_SETUP.md` - Complete branch protection guide
+- `QUICK_START_BRANCH_PROTECTION.md` - Quick reference guide
+
+## ✅ Success Criteria
+
+CI is properly configured when:
+- [x] CI workflow exists (`.github/workflows/ci.yml`)
+- [x] Workflow uses manual trigger (`workflow_dispatch`)
+- [ ] You can trigger workflow from Actions tab
+- [ ] All 4 checks run successfully when triggered
+- [ ] You verify checks before merging PRs
+
+---
+
+**Cost Optimization:** Manual triggers ensure you only pay for CI runs you explicitly need!
 npm run lint      # ESLint
 npm run prettier  # Prettier
 npm run test      # Tests

@@ -41,15 +41,16 @@ All protected branches must:
      - [ ] ☑️ **Dismiss stale pull request approvals when new commits are pushed**
      - [ ] ☑️ **Require review from Code Owners** (optional, if you set up CODEOWNERS file)
    
-   - [ ] ☑️ **Require status checks to pass before merging** ⚠️ **REQUIRED**
-     - Enable this option
+   - [ ] ⚠️ **Require status checks to pass before merging** - **OPTIONAL WITH MANUAL CI**
+     - **Note:** Since CI uses manual triggers, status checks won't automatically block PRs
+     - You can still enable this if you manually trigger CI before merging
      - [ ] ☑️ **Require branches to be up to date before merging** (recommended)
-     - Search for and select these status checks (they will appear after the first workflow run):
-       - `TypeScript Validation`
-       - `ESLint`
-       - `Prettier Format Check`
-       - `Test Suite`
-     - These checks run automatically via GitHub Actions (see `.github/workflows/ci.yml`)
+     - To enable automatic blocking:
+       1. Manually trigger CI workflow for each branch: Actions → CI → Run workflow
+       2. After checks complete, the status checks will appear here
+       3. Search for and select: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
+     - **Important:** With manual triggers, YOU must remember to run CI before merging
+     - These checks run only when manually triggered via GitHub Actions (see `.github/workflows/ci.yml`)
    
    - [ ] ☑️ **Require conversation resolution before merging** (optional but recommended)
    
