@@ -1,9 +1,9 @@
 import type { IAsyncYielded } from "../../async/types.ts";
+import { createResolvable } from "../../general/utils/createResolvable.ts";
 import { ParallelGeneratorResolver } from "../../resolvers/parallel/ParallelGeneratorResolver.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IYieldedParallelGenerator } from "../parallel/types.ts";
 import type { IYieldedSyncGenerator } from "../sync/types.ts";
-import { createResolvable } from "../../general/utils/createResolvable.ts";
 
 export interface IYieldedAwaited<T> {
   /**

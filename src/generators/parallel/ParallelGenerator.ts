@@ -1,4 +1,5 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { createResolvable } from "../../general/utils/createResolvable.ts";
 import {
   assertIsValidParallel,
   throttle,
@@ -13,7 +14,6 @@ import type {
   IParallelGeneratorState,
   IYieldedParallelGenerator,
 } from "./types.ts";
-import { createResolvable } from "../../general/utils/createResolvable.ts";
 
 const returnResult: IteratorReturnResult<void | undefined> = {
   done: true,

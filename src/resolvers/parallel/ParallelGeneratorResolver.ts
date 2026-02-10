@@ -1,7 +1,7 @@
+import { createResolvable } from "../../general/utils/createResolvable.ts";
 import { assertIsValidParallel } from "../../general/utils/parallel.ts";
 import type { IYieldedParallelGenerator } from "../../generators/parallel/types.ts";
 import type { ISharedYieldedResolver } from "../types.ts";
-import { createResolvable } from "../../general/utils/createResolvable.ts";
 
 type ResolveCallback<TReturn> = (value: TReturn) => void;
 
