@@ -337,8 +337,8 @@ Releases are managed by project maintainers. The process includes:
 4. **Commit version bump and changelog**:
    ```bash
    git add package.json package-lock.json CHANGELOG.md
-   git commit -m "Release v1.0.0"
-   git tag v1.0.0
+   git commit -m "Release vX.Y.Z"
+   git tag vX.Y.Z
    ```
 
 5. **Build and publish to npm**:
@@ -350,7 +350,7 @@ Releases are managed by project maintainers. The process includes:
 6. **Push changes and tags to GitHub**:
    ```bash
    git push origin main
-   git push origin v1.0.0
+   git push origin vX.Y.Z
    ```
 
 7. **Create GitHub release** with release notes at https://github.com/jEnbuska/yielded/releases/new
