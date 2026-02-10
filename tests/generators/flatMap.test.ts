@@ -113,6 +113,22 @@ describe("flatMap", () => {
       });
     });
 
+    describe("from async generator delayed 2", () => {
+      createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded
+            .flatMap(async function* (n) {
+              if (n % 2) return yield* new Set([n, n * 10]);
+              yield delay(n, 5);
+              yield n + 1;
+              yield* [delay(n + 2, 5), n + 3];
+            })
+            .toArray()) satisfies number[];
+          await handleExpect(mode, result, expected);
+        });
+      });
+    });
+
     describe("error from async generator", () => {
       createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
         test(mode, async () => {
