@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  # Automatic trigger when PR is opened or updated
+  pull_request:
+    types:
+      - opened              # PR is created
+      - ready_for_review    # Draft PR marked as ready
+      - synchronize         # New commits pushed to PR
+      - reopened            # Closed PR is reopened
+    branches:
+      - main
+      - 'release-*'
+  
+  # Automatic trigger when code is pushed to protected branches (after merge)
+  push:
+    branches:
+      - main
+      - 'release-*'
+  
+  # Manual trigger from PR UI or Actions tab (backup option)
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for running CI checks'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  validate:
+    name: TypeScript Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript validation
+        run: npm run validate
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  prettier:
+    name: Prettier Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prettier check
+        run: npm run prettier
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
