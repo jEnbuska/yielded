@@ -39,24 +39,31 @@ All protected branches must:
      - [ ] ☑️ **Require approvals** 
        - Set "Required number of approvals before merging" to: **1**
      - [ ] ☑️ **Dismiss stale pull request approvals when new commits are pushed**
+       - **CRITICAL:** This ensures re-approval is required after any changes
      - [ ] ☑️ **Require review from Code Owners** (optional, if you set up CODEOWNERS file)
    
-   - [ ] ☑️ **Require status checks to pass before merging** ⚠️ **REQUIRED**
-     - Enable this option
+   - [ ] ☑️ **Require status checks to pass before merging** - **REQUIRED**
+     - **Important:** CI runs automatically after merge, but for PRs you must manually trigger it
      - [ ] ☑️ **Require branches to be up to date before merging** (recommended)
-     - Search for and select these status checks (they will appear after the first workflow run):
-       - `TypeScript Validation`
-       - `ESLint`
-       - `Prettier Format Check`
-       - `Test Suite`
-     - These checks run automatically via GitHub Actions (see `.github/workflows/ci.yml`)
+     - To enable status check blocking:
+       1. Manually trigger CI workflow from a PR: Go to PR → Checks tab → Run workflow
+       2. After checks complete, the status checks will appear in this settings page
+       3. Search for and select all 4: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
+     - Once enabled, merge button will be disabled until all checks pass
+     - You must manually trigger CI from the PR Checks tab before merging
    
    - [ ] ☑️ **Require conversation resolution before merging** (optional but recommended)
    
    - [ ] ☑️ **Do not allow bypassing the above settings**
      - This ensures even repository admins must follow the rules
    
-   - [ ] ☑️ **Restrict who can push to matching branches** (optional)
+   - [ ] ☑️ **Restrict who can dismiss pull request reviews** (IMPORTANT)
+     - Only allow repository administrators
+     - This ensures only you can approve PRs
+   
+   - [ ] ☑️ **Restrict who can push to matching branches** (RECOMMENDED)
+     - Leave empty to only allow merges via pull requests
+     - This prevents direct pushes even by admins
      - If enabled, you can specify which users/teams can push
      - For strictest security, leave empty to block all direct pushes
 

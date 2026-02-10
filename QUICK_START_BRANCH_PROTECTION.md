@@ -1,70 +1,89 @@
-# Quick Start: Branch Protection Setup
+# Quick Start: Branch Protection Setup with Hybrid CI
 
 ## Current Status
 
-✅ **Pull Request Created**
-- PR #1: "Merge 3 cleanup commits from data-pipes repository"
-- From: `copilot/copy-main-data-pipes`
-- To: `main`
-- Status: Ready for your review
-- URL: https://github.com/jEnbuska/yielded/pull/1
-
-✅ **Documentation Created**
-- Complete setup guide in `BRANCH_PROTECTION_SETUP.md`
-- PR template in `.github/PULL_REQUEST_TEMPLATE.md`
+✅ **CI Workflow Configured**
+- Hybrid trigger mode: Automatic after merge + Manual for PRs
+- 4 quality checks: TypeScript, ESLint, Prettier, Tests
+- Post-merge verification automatic
+- Pre-merge verification manual
 
 ## What You Need to Do
 
-### Step 1: Review and Approve PR #1
+### Step 1: Enable Branch Protection (5-10 minutes)
 
-1. Go to https://github.com/jEnbuska/yielded/pull/1
-2. Review the changes
-3. Approve the PR (if you want branch protection to apply to this PR, enable it first)
-4. Merge the PR to main
-
-### Step 2: Enable Branch Protection (5-10 minutes)
-
-**Quick Steps:**
+**Configure for both `main` and `release-*` branches:**
 
 1. Go to https://github.com/jEnbuska/yielded/settings/branches
 2. Click "Add branch protection rule"
 3. For `main` branch:
    - Branch name pattern: `main`
-   - ✅ Require a pull request before merging
-   - ✅ Require approvals: **1**
-   - ✅ Dismiss stale pull request approvals when new commits are pushed
+   - ✅ **Require a pull request before merging**
+   - ✅ **Require approvals: 1** (only you can approve)
+   - ✅ **Dismiss stale pull request approvals when new commits are pushed**
    - ✅ **Require status checks to pass before merging**
-     - Select: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
-     - (These appear after the first CI workflow run)
-   - ✅ Do not allow bypassing the above settings
+     - Must manually trigger CI from PR first
+     - Then select: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
+   - ✅ **Restrict who can dismiss pull request reviews** (Repository administrators only)
+   - ✅ **Do not allow bypassing the above settings**
+   - ✅ **Restrict who can push to matching branches** (Leave empty for PR-only)
    - Click "Create" or "Save changes"
 
-4. Click "Add branch protection rule" again
-5. For `release-*` branches:
+4. Repeat for `release-*` branches:
    - Branch name pattern: `release-*`
-   - Apply the same settings as above (including status checks)
+   - Apply the exact same settings
    - Click "Create" or "Save changes"
 
-**Detailed Instructions:** See `BRANCH_PROTECTION_SETUP.md` for complete guide with screenshots descriptions.
+### Step 2: Understand the Workflow
+
+**For Pull Requests to Protected Branches:**
+
+1. ✅ Create PR to `main` or `release-*`
+2. ✅ **Manually trigger CI** from PR Checks tab
+3. ✅ Wait for all 4 checks to pass
+4. ✅ **Only you can approve** the PR
+5. ✅ Merge the PR
+6. ✅ **CI runs automatically** after merge
+
+**If PR is changed after approval:**
+- ⚠️ Approval automatically dismissed
+- ⚠️ Manually trigger CI again
+- ⚠️ All checks must pass again
+- ⚠️ Re-approve before merging
+
+### How to Trigger CI from a PR:
+
+**Option 1: From PR Checks Tab (Recommended)**
+1. Open the Pull Request
+2. Go to **Checks** tab
+3. Find the CI workflow
+4. Click "Run workflow" or "Re-run jobs"
+
+**Option 2: From Actions Tab**
+1. Go to Actions → CI → Run workflow
+2. Select PR branch
+3. Click "Run workflow"
 
 ## What This Achieves
 
-Once branch protection is enabled:
+✅ **Protected Branches (main & release-*):**
+- Cannot push directly - must use PRs
+- Only you can approve PRs
+- Approval dismissed on new commits (automatic re-approval required)
+- Status checks must pass (after manual trigger)
+- CI runs automatically after merge for verification
 
-✅ **main branch:**
-- Cannot be pushed to directly
-- All changes must go through a Pull Request
-- You must approve PRs before they can be merged
-- If new commits are pushed after approval, you must re-approve
-- **All CI checks must pass:**
-  - TypeScript Validation (`npm run validate`)
-  - ESLint (`npm run lint`)
-  - Prettier Format Check (`npm run prettier`)
-  - Test Suite (`npm run test`)
+✅ **Quality Assurance:**
+- TypeScript Validation
+- ESLint
+- Prettier Format Check
+- Test Suite
+- All must pass before merge
 
-✅ **release-* branches:**
-- Same protection as main (including CI checks)
-- Applies to: release-v1.0.0, release-2024-02-10, etc.
+✅ **Security:**
+- Only you control PR approvals
+- Only you can trigger CI checks
+- No bypassing the rules (even for admins)
 
 ❌ **What won't work anymore:**
 ```bash
