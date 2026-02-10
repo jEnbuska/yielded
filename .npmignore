@@ -1,0 +1,36 @@
+# Source files (we ship the compiled dist folder only)
+src/
+tests/
+
+# Development files
+.github/
+.vscode/
+.idea/
+*.log
+*.tgz
+
+# Configuration files
+.prettierrc.json
+eslint.config.js
+tsconfig.json
+tsconfig.build.json
+tsup.config.ts
+vitest.config.ts
+
+# Build artifacts and caches
+node_modules/
+coverage/
+.DS_Store
+
+# Documentation files that are not needed in the package
+BRANCH_PROTECTION_SETUP.md
+CI_SETUP_COMPLETE.md
+CONTRIBUTING.md
+HYBRID_CI_WORKFLOW_GUIDE.md
+MANUAL_CI_GUIDE.md
+QUICK_START_BRANCH_PROTECTION.md
+
+# Git files
+.git
+.gitignore
+.gitattributes

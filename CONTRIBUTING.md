@@ -302,11 +302,68 @@ yielded/
 
 Releases are managed by project maintainers. The process includes:
 
-1. Version bump in `package.json`
-2. Update CHANGELOG.md
-3. Create a git tag
-4. Publish to npm
-5. Create GitHub release with release notes
+### Prerequisites
+
+1. Ensure you have npm publish permissions for the `yielded` package
+2. Authenticate with npm:
+   ```bash
+   npm login
+   ```
+
+### Publishing Steps
+
+1. **Ensure all tests pass**:
+   ```bash
+   npm run lint
+   npm run prettier
+   npm run validate
+   npm test
+   ```
+
+2. **Update version in `package.json`**:
+   ```bash
+   # For patch releases (bug fixes)
+   npm version patch
+   
+   # For minor releases (new features, backward compatible)
+   npm version minor
+   
+   # For major releases (breaking changes)
+   npm version major
+   ```
+
+3. **Update CHANGELOG.md** with release notes describing changes
+
+4. **Commit version bump and changelog**:
+   ```bash
+   git add package.json package-lock.json CHANGELOG.md
+   git commit -m "Release v1.0.0"
+   git tag v1.0.0
+   ```
+
+5. **Build and publish to npm**:
+   ```bash
+   npm publish
+   ```
+   Note: The `prepublishOnly` script will automatically build the package before publishing.
+
+6. **Push changes and tags to GitHub**:
+   ```bash
+   git push origin main
+   git push origin v1.0.0
+   ```
+
+7. **Create GitHub release** with release notes at https://github.com/jEnbuska/yielded/releases/new
+
+### What Gets Published
+
+The npm package includes:
+- `dist/` - Compiled JavaScript and TypeScript definitions
+- `README.md` - Package documentation
+- `LICENSE` - MIT License
+- `package.json` - Package metadata
+
+Source files, tests, and development configurations are excluded (see `.npmignore`).
 
 ## Questions?
 
