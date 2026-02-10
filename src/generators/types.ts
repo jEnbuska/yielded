@@ -8,7 +8,6 @@ import type { IYieldedDropLast } from "./apply/dropLast.ts";
 import type { IYieldedFilter } from "./apply/filter.ts";
 import type { IYieldedFlat } from "./apply/flat.ts";
 import type { IYieldedFlatMap } from "./apply/flatMap.ts";
-import type { IYieldedLift } from "./apply/lift.ts";
 import type { IYieldedMap } from "./apply/map.ts";
 import type { IYieldedMapPairwise } from "./apply/mapPairwise.ts";
 import type { IYieldedTake } from "./apply/take.ts";
@@ -33,7 +32,7 @@ export type ICallbackReturn<
   TFlow extends IYieldedFlow,
 > = TFlow extends "sync" ? T : Promise<T> | T;
 
-export interface IYieldedOperations<T, TFlow extends IYieldedFlow>
+export interface ISharedYieldedOperations<T, TFlow extends IYieldedFlow>
   extends
     IYieldedChunkBy<T, TFlow>,
     IYieldedBatch<T, TFlow>,
@@ -46,7 +45,6 @@ export interface IYieldedOperations<T, TFlow extends IYieldedFlow>
     IYieldedMap<T, TFlow>,
     IYieldedFlatMap<T, TFlow>,
     IYieldedFlat<T, TFlow>,
-    IYieldedLift<T, TFlow>,
     IYieldedTap<T, TFlow>,
     IYieldedToSet<T, TFlow>,
     IYieldedMapPairwise<T, TFlow> {

@@ -1,6 +1,5 @@
 import type { INextYielded, IYieldedFlow } from "../../general/types.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
-import type { IYieldedParallelGenerator } from "../parallel/types.ts";
 import type { IYieldedSyncGenerator } from "../sync/types.ts";
 import type { IYieldedGenerator } from "../types.ts";
 
@@ -74,14 +73,4 @@ export async function* liftAsync<T, TOut>(
   for await (const next of middleware(generator)) {
     yield next;
   }
-}
-
-export function liftParallel<T, TOut>(
-  generator: IYieldedParallelGenerator<T> & Disposable,
-  middleware: (
-    generator: IYieldedParallelGenerator<T>,
-  ) => IYieldedParallelGenerator<TOut>,
-): IYieldedParallelGenerator<TOut> {
-  // minimal/empty: delegate to middleware and return its generator
-  return middleware(generator);
 }

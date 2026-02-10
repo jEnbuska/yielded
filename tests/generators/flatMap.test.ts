@@ -1,8 +1,19 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
-import { createTestSets } from "../utils/createTestSets.ts";
+import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
 
 describe("flatMap", () => {
+  describe("non array", () => {
+    const expected = [1, 2, 3];
+    createTestSets(expected).modes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded
+          .flatMap((next) => next)
+          .toArray()) satisfies Array<number>;
+        await handleExpect(mode, result, expected);
+      });
+    });
+  });
   test("flatten non array", () => {
     expect(
       Yielded.from([1, 2, 3])
@@ -11,96 +22,121 @@ describe("flatMap", () => {
     ).toStrictEqual([1, 2, 3]);
   });
 
-  const numbers = [[[1, 2]], [], [3, [4, 5]]] satisfies Array<
-    number | Array<number | number[]>
-  >;
-  const expected = [[1, 2], 3, [4, 5]] satisfies Array<number | number[]>;
-  const {
-    fromResolvedPromises,
-
-    fromPromises,
-    fromArray,
-    empty,
-  } = createTestSets(numbers);
-
-  test("from resolved promises", async () => {
-    expect(
-      await (fromResolvedPromises
-        .flatMap((next) => next)
-        .toArray() satisfies Promise<Array<number | number[]>>),
-    ).toStrictEqual(expected);
+  describe("from nested arrays", () => {
+    const expected = [[1, 2], 3, [4, 5]] satisfies Array<number | number[]>;
+    createTestSets([[[1, 2]], [], [3, [4, 5]]]).modes.forEach(
+      ({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded
+            .flatMap((next) => next)
+            .toArray()) satisfies Array<number | number[]>; // [[1,2],3,[4,5]]
+          await handleExpect(mode, result, expected);
+        });
+      },
+    );
   });
 
-  test("from promises", async () => {
-    expect(
-      (await fromPromises
-        .awaited()
-        .flatMap((next) => next)
-        .toArray()) satisfies Array<number | number[]>,
-    ).toStrictEqual(expected);
+  describe("from empty", () => {
+    createTestSets([]).modes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded
+          .flatMap((n) => (n % 2 ? new Set([n, n * 10]) : n))
+          .toArray()) satisfies number[]; // [1, 10, 2, 3, 30]
+
+        expect(result).toStrictEqual([]);
+      });
+    });
   });
 
-  test("from array", () => {
-    expect(
-      fromArray.flatMap((next) => next).toArray() satisfies Array<
-        number | number[]
-      >,
-    ).toStrictEqual(expected);
+  describe("from Set", () => {
+    const expected = [1, 10, 2, 3, 30];
+    createTestSets([1, 2, 3]).modes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded
+          .flatMap((n) => (n % 2 ? new Set([n, n * 10]) : n))
+          .toArray()) satisfies number[]; // [1, 10, 2, 3, 30]
+
+        await handleExpect(mode, result, expected);
+      });
+    });
   });
 
-  test("from empty", () => {
-    expect(
-      empty.flatMap((next) => next).toArray() satisfies Array<
-        number | number[]
-      >,
-    ).toStrictEqual([]);
-  });
+  describe("generators", () => {
+    const expected = [1, 10, 2, 3, 4, 5, 3, 30];
+    describe("from generator", () => {
+      createTestSets([1, 2, 3]).modes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded
+            .flatMap(function* (n) {
+              if (n % 2) return yield* new Set([n, n * 10]);
+              yield n;
+              yield Promise.resolve(n + 1);
+              yield* [n + 2, Promise.resolve(n + 3)];
+            })
+            .toArray()) satisfies Array<Promise<number> | number>;
+          await handleExpect(mode, result, expected);
+        });
+      });
+    });
 
-  test("from Set", () => {
-    const result = Yielded.from([1, 2, 3])
-      .flatMap((n) => (n % 2 ? new Set([n, n * 10]) : n))
-      .toArray() satisfies number[]; // [1, 10, 2, 3, 30]
+    describe("from async generator", () => {
+      createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded
+            .flatMap(async function* (n) {
+              if (n % 2) return yield* new Set([n, n * 10]);
+              yield n;
+              yield Promise.resolve(n + 1);
+              yield* [n + 2, Promise.resolve(n + 3)];
+            })
+            .toArray()) satisfies number[];
+          await handleExpect(mode, result, expected);
+        });
+      });
+    });
 
-    expect(result).toStrictEqual([1, 10, 2, 3, 30]);
-  });
+    describe("error from async generator", () => {
+      createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = yielded
+            .flatMap(async function* (n) {
+              yield n;
+              throw new Error("Test error");
+              yield n + 1;
+            })
+            .toArray();
+          await expect(result).rejects.toThrow("Test error");
+        });
+      });
+    });
+    describe("error from generator", () => {
+      createTestSets([1, 2, 3]).modes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          async function apply() {
+            return yielded
+              .flatMap(function* (n) {
+                yield n;
+                throw new Error("Test error");
+                yield n + 1;
+              })
+              .toArray();
+          }
+          await expect(apply()).rejects.toThrow("Test error");
+        });
+      });
+    });
 
-  test("from iterable", () => {
-    const result = Yielded.from([1, 2, 3])
-      .flatMap(function* (n) {
-        if (n % 2) return yield* new Set([n, n * 10]);
-        yield n;
-        yield* [n + 1];
-      })
-      .toArray() satisfies number[];
-
-    expect(result).toStrictEqual([1, 10, 2, 3, 3, 30]);
-  });
-
-  test("from async iterable", async () => {
-    const result = (await Yielded.from([1, 2, 3])
-      .awaited()
-      .flatMap(async function* (n) {
-        if (n % 2) return yield* new Set([n, n * 10]);
-        yield n;
-        yield Promise.resolve(n + 1);
-        yield* [n + 2, Promise.resolve(n + 3)];
-      })
-      .toArray()) satisfies number[];
-
-    expect(result).toStrictEqual([1, 10, 2, 3, 4, 5, 3, 30]);
-  });
-
-  test("from parallel iterable", async () => {
-    const result = (await Yielded.from([1, 2, 3])
-      .parallel(3)
-      .flatMap(async function* (n) {
-        if (n % 2) return yield* new Set([n, n * 10]);
-        yield n;
-        yield Promise.resolve(n + 1);
-        yield* [n + 2, Promise.resolve(n + 3)];
-      })
-      .toArray()) satisfies number[];
-
-    expect(result.sort()).toStrictEqual([1, 10, 2, 3, 4, 5, 3, 30].sort());
+    describe("error from async list", () => {
+      createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          async function apply() {
+            return yielded
+              .flatMap((n) => [n, Promise.reject("Test error"), n + 1])
+              .toArray();
+          }
+          await expect(apply()).rejects.toThrow("Test error");
+        });
+      });
+    });
   });
 });

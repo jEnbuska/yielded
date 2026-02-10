@@ -9,7 +9,6 @@ import { dropLastParallel } from "../generators/apply/dropLast.ts";
 import { filterParallel } from "../generators/apply/filter.ts";
 import { flatParallel } from "../generators/apply/flat.ts";
 import { flatMapParallel } from "../generators/apply/flatMap.ts";
-import { liftParallel } from "../generators/apply/lift.ts";
 import { mapParallel } from "../generators/apply/map.ts";
 import { mapPairwiseParallel } from "../generators/apply/mapPairwise.ts";
 import { parallelUpdate } from "../generators/apply/parallel.ts";
@@ -128,14 +127,6 @@ export class ParallelYielded<T>
 
   tap(...args: Parameters<IAsyncYielded<T>["tap"]>) {
     return this.#next(tapParallel, ...args);
-  }
-
-  lift<TOut>(middleware: any): IParallelYielded<TOut> {
-    return new ParallelYielded<TOut>(
-      this.generator,
-      liftParallel(this.generator, middleware),
-      this._parallel,
-    );
   }
 
   awaited(): IAsyncYielded<Awaited<T>> {

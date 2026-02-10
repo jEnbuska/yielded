@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
+import type { INextYielded, IYieldedFlow } from "../../src/general/types.ts";
 import { Yielded } from "../../src/index.ts";
-import { createTestSets } from "../utils/createTestSets.ts";
+import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
 
 /* Verify typing after flatmap is expected */
 function verify<T>() {
@@ -9,9 +10,16 @@ function verify<T>() {
 describe("flat", () => {
   {
     const numbers = [1, 2, 3];
-    function flatten<T, const D extends number>(input: T[], depth: D) {
+    function flatten<
+      const TFlow extends IYieldedFlow,
+      T,
+      const D extends number,
+    >(
+      yielded: INextYielded<T, TFlow>,
+      depth: D,
+    ): Array<FlatArray<T[], D>> | Promise<Array<FlatArray<T[], D>>> {
       return (
-        Yielded.from(input)
+        yielded
           .tap(verify<FlatArray<T[], 0>>())
           .flat(depth)
           // Verify typing works correctly
@@ -21,156 +29,263 @@ describe("flat", () => {
     }
     describe("depth 0", () => {
       const depth = 0;
-      test(`singles`, () => {
-        const result: number[] = flatten(numbers, depth);
-        expect(result).toStrictEqual(numbers);
+      describe("singles", () => {
+        createTestSets(numbers).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`1 deep array`, () => {
-        const result: number[][] = flatten([numbers], depth);
-        expect(result).toStrictEqual([numbers]);
+      describe("1 deep array", () => {
+        createTestSets([numbers]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([numbers]);
+          });
+        });
       });
-      test(`2 deep array`, () => {
-        const result: number[][][] = flatten([[numbers]], depth);
-        expect(result).toStrictEqual([[numbers]]);
+      describe(`2 deep array`, () => {
+        createTestSets([[numbers]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([[numbers]]);
+          });
+        });
       });
     });
 
     describe("depth 1", () => {
       const depth = 1;
-      test(`singles`, () => {
-        const result: number[] = flatten(numbers, depth);
-        expect(result).toStrictEqual(numbers);
+      describe("singles", () => {
+        createTestSets(numbers).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`1 deep array`, () => {
-        const result: number[] = flatten([numbers], depth);
-        expect(result).toStrictEqual(numbers);
+      describe("1 deep array", () => {
+        createTestSets([numbers]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`2 deep array`, () => {
-        const result: number[][] = flatten([[numbers]], depth);
-        expect(result).toStrictEqual([numbers]);
+      describe(`2 deep array`, () => {
+        createTestSets([[numbers]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([numbers]);
+          });
+        });
       });
-      test(`3 deep array`, () => {
-        const result: number[][][] = flatten([[[numbers]]], depth);
-        expect(result).toStrictEqual([[numbers]]);
+      describe(`3 deep array`, () => {
+        createTestSets([[[numbers]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([[numbers]]);
+          });
+        });
       });
     });
 
     describe("depth 2", () => {
       const depth = 2;
-      test(`singles`, () => {
-        const result: number[] = flatten(numbers, depth);
-        expect(result).toStrictEqual(numbers);
+      describe("singles", () => {
+        createTestSets(numbers).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`1 deep array`, () => {
-        const result: number[] = flatten([numbers], depth);
-        expect(result).toStrictEqual(numbers);
+      describe("1 deep array", () => {
+        createTestSets([numbers]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`2 deep array`, () => {
-        const result: number[] = flatten([[numbers]], depth);
-        expect(result).toStrictEqual(numbers);
+      describe(`2 deep array`, () => {
+        createTestSets([[numbers]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`3 deep array`, () => {
-        const result: number[][] = flatten([[[numbers]]], depth);
-        expect(result).toStrictEqual([numbers]);
+      describe(`3 deep array`, () => {
+        createTestSets([[[numbers]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([numbers]);
+          });
+        });
       });
-      test(`4 deep array`, () => {
-        const result: number[][][] = flatten([[[[numbers]]]], depth);
-        expect(result).toStrictEqual([[numbers]]);
+      describe(`4 deep array`, () => {
+        createTestSets([[[[numbers]]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([[numbers]]);
+          });
+        });
       });
     });
 
     describe("depth 3", () => {
       const depth = 3;
-      test(`singles`, () => {
-        const result: number[] = flatten(numbers, depth);
-        expect(result).toStrictEqual(numbers);
+      describe("singles", () => {
+        createTestSets(numbers).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`1 deep array`, () => {
-        const result: number[] = flatten([numbers], depth);
-        expect(result).toStrictEqual(numbers);
+      describe("1 deep array", () => {
+        createTestSets([numbers]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`2 deep array`, () => {
-        const result: number[] = flatten([[numbers]], depth);
-        expect(result).toStrictEqual(numbers);
+      describe(`2 deep array`, () => {
+        createTestSets([[numbers]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`3 deep array`, () => {
-        const result: number[] = flatten([[[numbers]]], depth);
-        expect(result).toStrictEqual(numbers);
+      describe(`3 deep array`, () => {
+        createTestSets([[[numbers]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[] = await flatten(yielded, depth);
+            expect(result).toStrictEqual(numbers);
+          });
+        });
       });
-      test(`4 deep array`, () => {
-        const result: number[][] = flatten([[[[numbers]]]], depth);
-        expect(result).toStrictEqual([numbers]);
+      describe(`4 deep array`, () => {
+        createTestSets([[[[numbers]]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([numbers]);
+          });
+        });
       });
-      test(`5 deep array`, () => {
-        const result: number[][][] = flatten([[[[[numbers]]]]], depth);
-        expect(result).toStrictEqual([[numbers]]);
+      describe(`5 deep array`, () => {
+        createTestSets([[[[[numbers]]]]]).modes.forEach(({ yielded, mode }) => {
+          test(mode, async () => {
+            const result: number[][][] = await flatten(yielded, depth);
+            expect(result).toStrictEqual([[numbers]]);
+          });
+        });
       });
     });
 
     describe("mixed", () => {
       const input = [1, [2, [3, [4, [5]]]]];
-      test("depth 0", () => {
-        const result = flatten(input, 0) satisfies Array<
-          number | Array<number | Array<number | Array<number | number[]>>>
-        >;
-        expect(result).toStrictEqual(input);
+      describe("depth 0", () => {
+        createTestSets([1, [2, [3, [4, [5]]]]]).modes.forEach(
+          ({ mode, yielded }) => {
+            test(mode, async () => {
+              const result = (await flatten(yielded, 0)) satisfies Array<
+                | number
+                | Array<number | Array<number | Array<number | number[]>>>
+              >;
+              expect(result).toStrictEqual(input);
+            });
+          },
+        );
       });
-      test("depth 1", () => {
-        const result = flatten(input, 1) satisfies Array<
-          number | Array<number | Array<number | number[]>>
-        >;
-        expect(result).toStrictEqual([1, 2, [3, [4, [5]]]]);
+      describe("depth 1", () => {
+        createTestSets([1, [2, [3, [4, [5]]]]]).modes.forEach(
+          ({ mode, yielded }) => {
+            test(mode, async () => {
+              const result = (await flatten(yielded, 1)) satisfies Array<
+                number | Array<number | Array<number | number[]>>
+              >;
+              expect(result).toStrictEqual([1, 2, [3, [4, [5]]]]);
+            });
+          },
+        );
       });
-      test("depth 2", () => {
-        const result = flatten(input, 2) satisfies Array<
-          number | Array<number | number[]>
-        >;
-        expect(result).toStrictEqual([1, 2, 3, [4, [5]]]);
+      describe("depth 2", () => {
+        createTestSets([1, [2, [3, [4, [5]]]]]).modes.forEach(
+          ({ mode, yielded }) => {
+            test(mode, async () => {
+              const result = (await flatten(yielded, 2)) satisfies Array<
+                number | Array<number | number[]>
+              >;
+              expect(result).toStrictEqual([1, 2, 3, [4, [5]]]);
+            });
+          },
+        );
       });
-      test("depth 3", () => {
-        const result = flatten(input, 3) satisfies Array<number | number[]>;
-        expect(result).toStrictEqual([1, 2, 3, 4, [5]]);
+      describe("depth 3", () => {
+        createTestSets([1, [2, [3, [4, [5]]]]]).modes.forEach(
+          ({ mode, yielded }) => {
+            test(mode, async () => {
+              const result = (await flatten(yielded, 3)) satisfies Array<
+                number | number[]
+              >;
+              expect(result).toStrictEqual([1, 2, 3, 4, [5]]);
+            });
+          },
+        );
       });
-      test("depth 4", () => {
-        const result = flatten(input, 4) satisfies number[];
-        expect(result).toStrictEqual([1, 2, 3, 4, 5]);
+
+      describe("depth 4", () => {
+        createTestSets([1, [2, [3, [4, [5]]]]]).modes.forEach(
+          ({ mode, yielded }) => {
+            test(mode, async () => {
+              const result = (await flatten(
+                yielded,
+                4,
+              )) satisfies Array<number>;
+              expect(result).toStrictEqual([1, 2, 3, 4, 5]);
+            });
+          },
+        );
       });
     });
   }
-  const numbers = [[[1, 2]], [], [3, [4, 5]]];
-  const {
-    fromResolvedPromises,
 
-    fromPromises,
-    fromArray,
-    empty,
-  } = createTestSets(numbers);
+  describe("flat mixed", () => {
+    createTestSets([[[1, 2]], [], [3, [4, 5]]]).modes.forEach(
+      ({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded.flat(5).toArray()) satisfies number[]; // [1,2,3,4,5]
 
-  test("from resolved promises", async () => {
-    expect(
-      await (fromResolvedPromises.flat(5).toArray() satisfies Promise<
-        number[]
-      >),
-    ).toStrictEqual([1, 2, 3, 4, 5]);
+          await handleExpect(mode, result, [1, 2, 3, 4, 5]);
+        });
+      },
+    );
   });
 
-  test("from promises", async () => {
-    expect(
-      (await fromPromises.awaited().flat(5).toArray()) satisfies number[],
-    ).toStrictEqual([1, 2, 3, 4, 5]);
+  describe("from empty", () => {
+    createTestSets<number>([]).modes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded.flat(5).toArray()) satisfies number[];
+        expect(result).toStrictEqual([]);
+      });
+    });
   });
 
-  test("from array", () => {
-    expect(fromArray.flat(5).toArray() satisfies number[]).toStrictEqual([
-      1, 2, 3, 4, 5,
-    ]);
+  describe("from nested empty", () => {
+    createTestSets<number[]>([[], []]).modes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded.flat(5).toArray()) satisfies number[];
+        expect(result).toStrictEqual([]);
+      });
+    });
   });
 
-  test("from empty", () => {
-    expect(empty.flat(5).toArray() satisfies number[]).toStrictEqual([]);
-  });
-
-  describe("from documentation", () => {
+  describe("from documentation examples", () => {
     test("flat default dept", () => {
       expect(
         Yielded.from([[1], [2], [3]])
