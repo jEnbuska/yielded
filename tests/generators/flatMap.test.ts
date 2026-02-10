@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
 import "../utils/initTestPolyfills.ts";
+import { delay } from "../utils/delay.ts";
+
 describe("flatMap", () => {
   describe("non array", () => {
     const expected = [1, 2, 3];
@@ -88,6 +90,22 @@ describe("flatMap", () => {
               yield n;
               yield Promise.resolve(n + 1);
               yield* [n + 2, Promise.resolve(n + 3)];
+            })
+            .toArray()) satisfies number[];
+          await handleExpect(mode, result, expected);
+        });
+      });
+    });
+
+    describe("from async generator delayed", () => {
+      createTestSets([1, 2, 3]).allAsyncModes.forEach(({ mode, yielded }) => {
+        test(mode, async () => {
+          const result = (await yielded
+            .flatMap(async function* (n) {
+              if (n % 2) return yield* new Set([n, n * 10]);
+              yield n;
+              yield delay(n + 1, 5);
+              yield* [n + 2, delay(n + 3, 5)];
             })
             .toArray()) satisfies number[];
           await handleExpect(mode, result, expected);

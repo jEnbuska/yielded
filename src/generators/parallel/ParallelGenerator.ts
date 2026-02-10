@@ -184,16 +184,16 @@ export class ParallelGenerator<
   };
 
   async #handleNext(): Promise<IteratorResult<TOut, void>> {
-    while (this.#state !== "aborted") {
-      const buffered = await this.#getNextFromBuffer();
+    while (true) {
+      const buffered = await this.#registerWork(this.#getNextFromBuffer());
       if (buffered) return buffered;
+
       if (this.#getState() !== "running") return this.#handleDone();
+
       const next = await this.#registerWork(this.#generator.next());
-      if (next.done) {
-        return this.#handleDone();
-      }
+      if (next.done) return this.#handleDone();
+
       const result = await this.#registerWork(this.#onNext?.(next.value));
-      if (this.#getState() === "aborted") break;
       if (!result) continue;
       if (result === "STOP") {
         void this.#generator.return?.();
@@ -201,12 +201,10 @@ export class ParallelGenerator<
       }
       const iterable = new ParallelBufferGenerator(result);
       const first = await this.#registerWork(iterable.next());
-      if (this.#getState() === "aborted") break;
       if (first.done) continue;
       this.#buffer.push(iterable);
       return first;
     }
-    return returnResult;
   }
 
   async #registerWork<T>(work: Promise<T> | T): Promise<T> {
@@ -215,10 +213,8 @@ export class ParallelGenerator<
     this.#pendingWork.add(promise);
     try {
       const result = await promise;
-      if (this.#getState() === "aborted") {
-        throw new ParallelAbortError("Aborted");
-      }
-      return result;
+      if (this.#getState() !== "aborted") return result;
+      throw new ParallelAbortError("Aborted");
     } finally {
       this.#pendingWork.delete(promise);
     }
