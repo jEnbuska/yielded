@@ -1,10 +1,6 @@
 import { AsyncYielded } from "../async/AsyncYielded.ts";
-import type {
-  IAsyncYielded,
-  IAsyncYieldedSource,
-  IYieldedSource,
-} from "../async/types.ts";
-import type { IYieldedIterableSource } from "../general/types.ts";
+import type { IAsyncYielded } from "../async/types.ts";
+import type { IMaybeAsync, IYieldedIterableSource } from "../general/types.ts";
 import { syncToAwaited } from "../generators/apply/awaited.ts";
 import { batchSync } from "../generators/apply/batch.ts";
 import { chunkBySync } from "../generators/apply/chunkBy.ts";
@@ -19,6 +15,7 @@ import { sortedSync } from "../generators/apply/sorted.ts";
 import { takeLastSync } from "../generators/apply/takeLast.ts";
 import { takeWhileSync } from "../generators/apply/takeWhile.ts";
 import { tapSync } from "../generators/apply/tap.ts";
+import { isAsyncIterable } from "../generators/apply/utils/iteration.ts";
 import { assertNotNegative } from "../generators/apply/utils/take.ts";
 import type { IYieldedSyncGenerator } from "../generators/sync/types.ts";
 import type {
@@ -56,18 +53,6 @@ export class Yielded<T> extends YieldedResolver<T> implements IYielded<T> {
     return [source];
   }
 
-  /** Creates AsyncYielded from a Promise of an array
-   * @example
-   * Yielded<number>.from(Promise.resolve([1,2,3]))
-   */
-  static from<T>(promise: Promise<T[]>): IAsyncYielded<T>;
-
-  /** Creates AsyncYielded from a Promise
-   * @example
-   * Yielded<number>.from(Promise.resolve(1))
-   */
-  static from<T>(promise: Promise<T>): IAsyncYielded<T>;
-
   /** Creates Yielded from any Iterable (Array, Set, Generator, ...)
    *
    * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/from}
@@ -77,23 +62,26 @@ export class Yielded<T> extends YieldedResolver<T> implements IYielded<T> {
    * */
   static from<T>(iterable: Iterable<T, unknown, unknown>): IYielded<T>;
 
+  /** Creates AsyncYielded from a Promise of an array
+   * @example
+   * Yielded<number>.from(Promise.resolve([1,2,3]))
+   */
+  static from<T>(promise: Promise<Iterable<T>>): IAsyncYielded<T>;
+
   /** Creates AsyncYielded from any AsyncIterable
    * @example
    * Yielded.from(asyncGeneratorFunction())
    * */
   static from<T>(
-    asyncIterable:
-      | AsyncIterable<T, unknown, unknown>
-      | AsyncGenerator<T, unknown, unknown>,
+    asyncIterable: IMaybeAsync<
+      AsyncIterable<T, unknown, unknown> | AsyncGenerator<T, unknown, unknown>
+    >,
   ): IAsyncYielded<T>;
 
   static from(source: any) {
     const iterable: any = Yielded.#extractIterable(source);
-    if (iterable[Symbol.asyncIterator]) {
-      return new AsyncYielded<unknown>(
-        undefined,
-        iterable[Symbol.asyncIterator](),
-      ) as any;
+    if (isAsyncIterable(source) || source instanceof Promise) {
+      return new AsyncYielded<unknown>(undefined, source as any) as any;
     }
     return new Yielded<unknown>(
       undefined,
@@ -103,44 +91,6 @@ export class Yielded<T> extends YieldedResolver<T> implements IYielded<T> {
         }
       })(),
     ) as any;
-  }
-
-  static concat<T>(...sources: Array<IYieldedSource<T>>): IYielded<T>;
-
-  static concat<T>(...sources: Array<IAsyncYieldedSource<T>>): IAsyncYielded<T>;
-
-  static concat<T>(
-    ...sources: Array<IYieldedSource<T> | IAsyncYieldedSource<T>>
-  ): IAsyncYielded<T>;
-
-  static concat(...sources: Array<any>): any {
-    const iterables = sources.map(Yielded.#extractIterable);
-    const isAsync = iterables.some(
-      (source: any) => !!source?.[Symbol.asyncIterator],
-    );
-    if (isAsync) {
-      return AsyncYielded.from(
-        (async function* () {
-          for (const iterable of iterables) {
-            if (iterable?.[Symbol.asyncIterator]) {
-              for await (const next of iterable) yield next;
-            } else if (iterable?.[Symbol.iterator]) {
-              yield* iterable;
-            } else {
-              yield iterable;
-            }
-          }
-        })(),
-      );
-    }
-    return new Yielded<any>(
-      undefined,
-      (function* () {
-        for (const iterable of iterables) {
-          yield* iterable;
-        }
-      })(),
-    );
   }
 
   #next<TNext, TArgs extends any[]>(

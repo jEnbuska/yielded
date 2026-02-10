@@ -4,13 +4,16 @@ A TypeScript library for composing and transforming values from synchronous iter
 
 Operations are lazy — they don’t process the entire sequence up front. Each input value flows through the pipeline one at a time as you consume the output, enabling efficient handling of large and asynchronous sources.
 
-It extends the native [Iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/Iterator) API, and provides the same capabilities also for handling [AsyncIterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator)s
+It extends the native [Iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/Iterator) API, and provides the same capabilities also for handling [AsyncIterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator)s *(with a few exceptions when it comes to parallel iterations)*.
+
+
 
 ### High level example
 
 ```ts
 import { Yielded } from "yielded";
 
+...
 const getPageOfCustomers = async (
     pagination: PaginationArgs<Customer>, 
     organizationId: string
@@ -20,8 +23,9 @@ const getPageOfCustomers = async (
       // Allow up to 5 concurrent calls to getContractorCustomers
     .parallel(5)
     .flatMap(async (contractor) => {
-      const customers = await getContractorCustomers(contractor.id, { signal });
-      return customers.map(assignWith({ contactorId: contractor.id }));
+      const {contractorId} = contractor;
+      const customers = await getContractorCustomers(contractorId, { signal });
+      return customers.map((customer) => ({...customer, contractorId }));
     })
     // Back to 1 concurrency for the rest of the pipeline
     .awaited()

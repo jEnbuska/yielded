@@ -24,6 +24,10 @@ import type { IParallelYielded } from "../parallel/types.ts";
 import { AsyncYieldedResolver } from "../resolvers/async/AsyncYieldedResolver.ts";
 import type { ISharedYieldedResolver } from "../resolvers/types.ts";
 import type { IAsyncYielded } from "./types.ts";
+import {
+  isAsyncIterable,
+  isIterable,
+} from "../generators/apply/utils/iteration.ts";
 
 export class AsyncYielded<T>
   extends AsyncYieldedResolver<T>
@@ -37,29 +41,26 @@ export class AsyncYielded<T>
   }
 
   static from<T>(
-    asyncGenerator: AsyncGenerator<T, unknown, unknown>,
-  ): AsyncYielded<T>;
+    source:
+      | IMaybeAsync<
+          | AsyncGenerator<T, unknown, unknown>
+          | AsyncIterable<T, unknown, unknown>
+        >
+      | Promise<Iterable<T>>,
+  ): AsyncYielded<T> {
+    return AsyncYielded.from(
+      (async function* () {
+        const out = await source;
 
-  static from<T>(promise: Promise<T[]> | Promise<T>): AsyncYielded<T>;
-
-  static from(source: any) {
-    if (typeof source === "function") {
-      source = source();
-    }
-    if (source[Symbol.asyncIterator]) {
-      return new AsyncYielded<unknown>(
-        undefined,
-        source[Symbol.asyncIterator](),
-      );
-    }
-    if (source instanceof Promise) {
-      return AsyncYielded.from(
-        (async function* () {
-          yield* await source;
-        })(),
-      );
-    }
-    throw new TypeError(`Invalid Async generator source ${source}`);
+        if (isAsyncIterable(out)) {
+          for await (const next of out) yield next;
+        } else if (isIterable(out)) {
+          yield yield* await source;
+        } else {
+          yield source;
+        }
+      })(),
+    );
   }
 
   #next<TNext, TArgs extends any[]>(

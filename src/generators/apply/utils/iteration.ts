@@ -3,21 +3,17 @@ import type { IYieldedIterableSource } from "../../../general/types.ts";
 export function isAsyncIterableProvider<T>(
   value: unknown,
 ): value is IYieldedIterableSource<T, "async"> {
-  if (isIterableProvider(value)) return true;
+  return isIterableProvider(value) || isAsyncIterable(value);
+}
+
+export function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
   return (
     Boolean(value) &&
     typeof (value as AsyncIterable<any>)[Symbol.asyncIterator] === "function"
   );
 }
 
-function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
-  return (
-    Boolean(value) &&
-    typeof (value as AsyncIterable<any>)[Symbol.asyncIterator] === "function"
-  );
-}
-
-function isIterable<T>(value: unknown): value is Iterable<T> {
+export function isIterable<T>(value: unknown): value is Iterable<T> {
   return (
     Boolean(value) &&
     typeof (value as Iterable<any>)[Symbol.iterator] === "function"
