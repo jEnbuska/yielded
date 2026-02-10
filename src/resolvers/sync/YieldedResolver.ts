@@ -32,6 +32,22 @@ export class YieldedResolver<T>
     }
   }
 
+  [Symbol.dispose]() {
+    this.generator[Symbol.dispose]?.();
+  }
+
+  next(): IteratorResult<T, void | undefined> {
+    return this.generator.next();
+  }
+
+  return(): IteratorResult<T, void | undefined> {
+    return this.generator.return?.()!;
+  }
+
+  throw(e: any): IteratorResult<T, void | undefined> {
+    return this.generator.throw?.(e)!;
+  }
+
   #apply<TArgs extends any[], TReturn>(
     cb: (...args: [IYieldedSyncGenerator<T>, ...TArgs]) => TReturn,
     ...args: TArgs

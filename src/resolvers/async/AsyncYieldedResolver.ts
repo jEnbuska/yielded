@@ -41,6 +41,22 @@ export class AsyncYieldedResolver<T>
     }
   }
 
+  next() {
+    return this.generator.next();
+  }
+
+  return() {
+    return this.generator.return();
+  }
+
+  throw(error: any) {
+    return this.generator.throw(error);
+  }
+
+  async [Symbol.asyncDispose]() {
+    this.generator[Symbol.dispose]();
+  }
+
   async #apply<TArgs extends any[], TReturn>(
     cb: (...args: [IYieldedAsyncGenerator<T>, ...TArgs]) => Promise<TReturn>,
     ...args: TArgs

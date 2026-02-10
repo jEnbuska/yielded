@@ -6,8 +6,7 @@ import {
   type IParallelResolverName,
   type IParallelResolverSubConfig,
 } from "../parallel/ParallelGeneratorResolver.ts";
-import type { IYieldedResolver } from "../sync/types.ts";
-import type { IResolverReturn } from "../types.ts";
+import type { IResolverReturn, ISharedYieldedResolver } from "../types.ts";
 import { createGeneratorEmptyMsg } from "./utils/createGeneratorEmptyMsg.ts";
 import { getEmptySlot, isEmptySlot } from "./utils/emptySlot.ts";
 import { memoize } from "./utils/memoize.ts";
@@ -62,7 +61,7 @@ export function maxBySync(
 }
 
 export function handleMaxBySync(
-  method: keyof IYieldedResolver<any> & string,
+  method: keyof ISharedYieldedResolver<any, "sync">,
   generator: IYieldedSyncGenerator,
   callback: (next: unknown, index: number) => number,
   rest: unknown[],
@@ -103,7 +102,7 @@ export async function maxByAsync(
 }
 
 export async function handleMaxByAsync(
-  method: keyof IYieldedResolver<any> & string,
+  method: keyof ISharedYieldedResolver<any, "async">,
   generator: IYieldedAsyncGenerator,
   callback: (next: unknown, index: number) => IMaybeAsync<number>,
   rest: unknown[],
