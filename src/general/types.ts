@@ -3,9 +3,9 @@ import type { IParallelYielded } from "../parallel/types.ts";
 import type { IYielded } from "../sync/types.ts";
 
 export type INextYielded<T, TFlow extends IYieldedFlow> = TFlow extends "async"
-  ? IAsyncYielded<T>
+  ? IAsyncYielded<Awaited<T>>
   : TFlow extends "parallel"
-    ? IParallelYielded<T>
+    ? IParallelYielded<Awaited<T>>
     : IYielded<T>;
 
 export type IMaybeAsync<T> = Promise<T> | T;

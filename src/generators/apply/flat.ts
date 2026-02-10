@@ -39,9 +39,7 @@ function nextToFlat<T, const Depth extends number = 1>(
   next: T,
   depth: Depth,
 ): Array<FlatArray<T[], Depth>> {
-  if (!Array.isArray(next) || depth <= 0) {
-    return [next] as any;
-  }
+  if (!Array.isArray(next) || depth <= 0) return [next] as any;
   return next.flat(depth - 1) as any;
 }
 
