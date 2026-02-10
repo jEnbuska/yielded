@@ -16,7 +16,7 @@
   "scripts": {
     "validate": "tsc --noEmit",
     "validate:watch": "tsc --watch",
-    "build": "bun build ./src --outdir ./dist",
+    "build": "tsup",
     "test": "USE_POLYFILLS=true vitest run --coverage && vitest run --coverage",
     "test:watch": "vitest --ui",
     "lint": "eslint --ext .ts --max-warnings 0 ./src",
@@ -38,6 +38,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.8.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
