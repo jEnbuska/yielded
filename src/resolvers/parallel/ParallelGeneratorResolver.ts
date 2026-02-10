@@ -1,6 +1,7 @@
 import { assertIsValidParallel } from "../../general/utils/parallel.ts";
 import type { IYieldedParallelGenerator } from "../../generators/parallel/types.ts";
 import type { ISharedYieldedResolver } from "../types.ts";
+import { createResolvable } from "../../general/utils/createResolvable.ts";
 
 type ResolveCallback<TReturn> = (value: TReturn) => void;
 
@@ -44,9 +45,9 @@ export class ParallelGeneratorResolver<T, TReturn> {
 
   readonly #onDone?: OnDone<TReturn>;
 
-  readonly #resolvable = Promise.withResolvers<TReturn>();
+  readonly #resolvable = createResolvable<TReturn>();
 
-  #onNextResolvable = Promise.withResolvers<void>();
+  #onNextResolvable = createResolvable();
 
   #state: ParallelGeneratorResolverState = "running";
 
@@ -120,11 +121,11 @@ export class ParallelGeneratorResolver<T, TReturn> {
     try {
       while (this.#state === "running") {
         this.#running++;
-        this.#onNextResolvable = Promise.withResolvers<void>();
+        this.#onNextResolvable = createResolvable<void>();
         void this.#generator.next().then(this.#handleNext).catch(this.#reject);
         if (this.#running < this.#parallel) continue;
         await this.#onNextResolvable.promise;
-        this.#onNextResolvable = Promise.withResolvers<void>();
+        this.#onNextResolvable = createResolvable<void>();
       }
       while (this.#state === "depleted") {
         if (!this.#running) {
@@ -134,7 +135,7 @@ export class ParallelGeneratorResolver<T, TReturn> {
           this.#state = "resolved";
         } else {
           await this.#onNextResolvable.promise;
-          this.#onNextResolvable = Promise.withResolvers<void>();
+          this.#onNextResolvable = createResolvable<void>();
         }
       }
     } catch (error) {

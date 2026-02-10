@@ -1,4 +1,5 @@
 import type { IMaybeAsync } from "../types.ts";
+import { createResolvable } from "./createResolvable.ts";
 
 /**
  * Creates a throttled version of the given function that limits
@@ -87,7 +88,7 @@ export function throttle<TArgs extends any[], TReturn>(
 
   return Object.assign(
     function throttledFunction(...args: TArgs): Promise<TReturn> {
-      const resolvable = Promise.withResolvers<TReturn>();
+      const resolvable = createResolvable<TReturn>();
       queue.push({ args, resolvable });
       void processQueue();
       return resolvable.promise;

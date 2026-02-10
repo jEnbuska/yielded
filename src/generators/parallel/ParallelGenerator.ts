@@ -13,6 +13,7 @@ import type {
   IParallelGeneratorState,
   IYieldedParallelGenerator,
 } from "./types.ts";
+import { createResolvable } from "../../general/utils/createResolvable.ts";
 
 const returnResult: IteratorReturnResult<void | undefined> = {
   done: true,
@@ -38,7 +39,7 @@ export class ParallelGenerator<
   #pendingWork = new Set<any>();
 
   #doneResolvable: PromiseWithResolvers<void> & { resolved?: boolean } =
-    Promise.withResolvers<void>();
+    createResolvable();
 
   readonly #parallel: number;
 
@@ -48,7 +49,7 @@ export class ParallelGenerator<
 
   #drainers = 0;
 
-  #drainResolvable = Promise.withResolvers<void>();
+  #drainResolvable = createResolvable<void>();
 
   static create<T, TOut = T>(options: {
     name: IParallelGeneratorName;
@@ -150,7 +151,7 @@ export class ParallelGenerator<
 
     if (this.#state === "aborted") return returnResult;
 
-    const resolvable = Promise.withResolvers<IteratorResult<TOut, void>>();
+    const resolvable = createResolvable<IteratorResult<TOut, void>>();
     this.#queue.push(resolvable);
     if (this.#state === "done") {
       void this.#drainLastFromBuffered()
@@ -265,7 +266,7 @@ export class ParallelGenerator<
       break;
     }
     this.#drainResolvable.resolve();
-    this.#drainResolvable = Promise.withResolvers<void>();
+    this.#drainResolvable = createResolvable<void>();
     if (!next.done || wasResolved) return next;
     await this.#doneResolvable.promise;
     return this.#drainLastFromBuffered();
