@@ -478,16 +478,16 @@ Find the minimum value, optionally using a selector function.
 **Note:** Without `defaultValue`, throws a `TypeError` if the iterator is empty.
 
 ```typescript
-Yielded.from([3, 1, 4, 1, 5]).minBy()
+Yielded.from([3, 1, 4, 1, 5]).minBy(n => n)
 // => 1
 
 Yielded.from([{x: 3}, {x: 1}, {x: 2}]).minBy(obj => obj.x)
 // => {x: 1}
 
-Yielded.from([]).minBy(undefined, 0)
+Yielded.from<{x: number}>([]).minBy(obj => obj.x, 0)
 // => 0
 
-Yielded.from([]).minBy()
+Yielded.from<{x: number}>([]).minBy(obj => obj.x)
 // Throws TypeError
 ```
 
@@ -503,10 +503,10 @@ Yielded.from([3, 1, 4, 1, 5]).maxBy()
 Yielded.from([{x: 3}, {x: 1}, {x: 2}]).maxBy(obj => obj.x)
 // => {x: 3}
 
-Yielded.from([]).maxBy(undefined, 0)
+Yielded.from<{x: number}>([]).maxBy(obj => obj.x, 0)
 // => 0
 
-Yielded.from([]).maxBy()
+Yielded.from<{x: number}>([]).maxBy((obj) => obj.x)
 // Throws TypeError
 ```
 
