@@ -247,6 +247,8 @@ Yielded.from([
 #### `parallel(concurrency)`
 Process async operations with limited concurrency. Returns a `ParallelYielded` instance.
 
+**Note:** `concurrency` must be an integer between 1 and 50 (inclusive).
+
 ```typescript
 await Yielded.from([1, 2, 3, 4, 5])
   .parallel(2) // Max 2 concurrent operations
@@ -271,7 +273,7 @@ Yielded.from([Promise.resolve(1), Promise.resolve(2)])
 
 ### Utility Operations
 
-#### [`tap(callback)`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/tap)
+#### `tap(callback)`
 Execute a side effect for each value without modifying the stream.
 
 ```typescript
@@ -362,10 +364,16 @@ Yielded.from([1, 2, 3]).toReversed()
 #### [`reduce(reducer, initialValue?)`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/reduce)
 Reduce all values to a single value.
 
+**Note:** Without `initialValue`, throws a `TypeError` if the iterator is empty.
+
 ```typescript
 Yielded.from([1, 2, 3, 4, 5])
   .reduce((sum, n) => sum + n, 0)
 // => 15
+
+Yielded.from([1, 2, 3])
+  .reduce((max, n) => Math.max(max, n))
+// => 3
 ```
 
 #### [`forEach(callback)`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/forEach)
@@ -416,20 +424,33 @@ Yielded.from([2, 4, 6, 8])
 #### `first(defaultValue?)`
 Get the first value.
 
+**Note:** Without `defaultValue`, throws a `TypeError` if the iterator is empty.
+
 ```typescript
 Yielded.from([1, 2, 3]).first()
 // => 1
 
 Yielded.from([]).first(0)
 // => 0
+
+Yielded.from([]).first()
+// Throws TypeError
 ```
 
 #### `last(defaultValue?)`
 Get the last value.
 
+**Note:** Without `defaultValue`, throws a `TypeError` if the iterator is empty.
+
 ```typescript
 Yielded.from([1, 2, 3]).last()
 // => 3
+
+Yielded.from([]).last(0)
+// => 0
+
+Yielded.from([]).last()
+// Throws TypeError
 ```
 
 #### `count()`
@@ -454,20 +475,39 @@ Yielded.from([{x: 1}, {x: 2}, {x: 3}]).sumBy(obj => obj.x)
 #### `minBy(selector?, defaultValue?)`
 Find the minimum value, optionally using a selector function.
 
+**Note:** Without `defaultValue`, throws a `TypeError` if the iterator is empty.
+
 ```typescript
 Yielded.from([3, 1, 4, 1, 5]).minBy()
 // => 1
 
 Yielded.from([{x: 3}, {x: 1}, {x: 2}]).minBy(obj => obj.x)
 // => {x: 1}
+
+Yielded.from([]).minBy(undefined, 0)
+// => 0
+
+Yielded.from([]).minBy()
+// Throws TypeError
 ```
 
 #### `maxBy(selector?, defaultValue?)`
 Find the maximum value, optionally using a selector function.
 
+**Note:** Without `defaultValue`, throws a `TypeError` if the iterator is empty.
+
 ```typescript
 Yielded.from([3, 1, 4, 1, 5]).maxBy()
 // => 5
+
+Yielded.from([{x: 3}, {x: 1}, {x: 2}]).maxBy(obj => obj.x)
+// => {x: 3}
+
+Yielded.from([]).maxBy(undefined, 0)
+// => 0
+
+Yielded.from([]).maxBy()
+// Throws TypeError
 ```
 
 ## Advanced Examples
