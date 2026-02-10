@@ -1,13 +1,24 @@
 name: CI
 
 on:
+  # Automatic trigger when PR is opened or updated
+  pull_request:
+    types:
+      - opened              # PR is created
+      - ready_for_review    # Draft PR marked as ready
+      - synchronize         # New commits pushed to PR
+      - reopened            # Closed PR is reopened
+    branches:
+      - main
+      - 'release-*'
+  
   # Automatic trigger when code is pushed to protected branches (after merge)
   push:
     branches:
       - main
       - 'release-*'
   
-  # Manual trigger from PR UI or Actions tab
+  # Manual trigger from PR UI or Actions tab (backup option)
   workflow_dispatch:
     inputs:
       reason:

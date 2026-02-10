@@ -2,9 +2,10 @@
 
 ## CI Workflow (`ci.yml`)
 
-This workflow runs automated quality checks using a **hybrid trigger model**:
+This workflow runs automated quality checks **automatically** for all pull requests and merges:
+- **Automatic** when PR is opened or marked as ready for review
 - **Automatic** after merging to protected branches
-- **Manual** for PR verification before merge
+- **Manual** trigger available as backup option
 
 ### Checks Performed
 
@@ -29,22 +30,24 @@ The workflow runs four parallel jobs:
 
 ### When CI Runs
 
-#### Automatic Runs (Post-Merge Verification)
+#### Automatic Runs for Pull Requests
+CI runs **automatically** for anyone who creates or updates a PR to `main` or `release-*` branches:
+- ✅ When PR is **opened** (created)
+- ✅ When draft PR is marked as **ready for review**
+- ✅ When new **commits are pushed** to the PR branch
+- ✅ When a closed PR is **reopened**
+
+**No manual trigger needed** - CI starts automatically for all PRs!
+
+#### Automatic Runs After Merge
 CI runs **automatically** when code is pushed to:
 - `main` branch
 - `release-*` branches
 
 This happens after PRs are merged to verify the integrated code.
 
-#### Manual Runs (Pre-Merge Verification)
-For **Pull Requests**, CI must be **manually triggered** by the repository owner:
-
-**To run CI from a Pull Request:**
-1. Open the Pull Request on GitHub
-2. Go to the **Checks** tab in the PR
-3. Find the **CI** workflow
-4. Click **"Run workflow"** or **"Re-run jobs"**
-5. Wait for all 4 checks to complete
+#### Manual Runs (Backup Option)
+CI can still be **manually triggered** if needed:
 
 **To run CI from the Actions tab:**
 1. Go to **Actions** tab: https://github.com/jEnbuska/yielded/actions
@@ -54,24 +57,22 @@ For **Pull Requests**, CI must be **manually triggered** by the repository owner
 5. Optionally add a reason
 6. Click **"Run workflow"**
 
-**Only the repository owner can trigger the workflow manually.**
-
-### Required PR Workflow
+### PR Workflow
 
 For pull requests to `main` or `release-*` branches:
 
 1. ✅ **Create PR** to protected branch
-2. ✅ **Manually trigger CI** from the PR Checks tab
+2. ✅ **CI runs automatically** - no manual trigger needed!
 3. ✅ **Wait for all checks** to pass (green checkmarks)
-4. ✅ **Repository owner approves** the PR
+4. ✅ **Get PR approval** (from repository owner if branch protection is configured)
 5. ✅ **Merge** the PR
 6. ✅ **CI runs automatically** after merge to verify integration
 
 If changes are made to the PR after approval:
-- ⚠️ Approval is automatically dismissed
-- ⚠️ CI checks must be manually triggered again
+- ⚠️ Approval may be automatically dismissed (if stale approval dismissal is enabled)
+- ✅ **CI runs automatically** on the new commits
 - ⚠️ All checks must pass again
-- ⚠️ Repository owner must re-approve
+- ⚠️ May need re-approval before merging (depends on branch protection settings)
 
 ### Local Testing (Recommended)
 
@@ -98,14 +99,14 @@ For both `main` and `release-*` branch patterns:
 
 1. ✅ **Require a pull request before merging**
    - Required number of approvals: **1**
-   - Restrict who can approve: **Repository owner only**
+   - Restrict who can approve: **Repository owner only** (optional)
 
 2. ✅ **Dismiss stale pull request approvals when new commits are pushed**
    - This ensures re-approval after any changes
 
 3. ✅ **Require status checks to pass before merging**
    - Select all 4 checks: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
-   - Enable after manually triggering CI at least once
+   - CI now runs automatically, so checks will appear after first PR
 
 4. ✅ **Do not allow bypassing the above settings**
    - Ensures even admins must follow the rules
@@ -115,22 +116,19 @@ For both `main` and `release-*` branch patterns:
 
 ### How It Works Together
 
-**Branch Protection + Hybrid CI = Secure Workflow:**
+**Branch Protection + Automatic CI = Quality Assurance:**
 
-- ✅ PRs require your approval to merge
-- ✅ You manually trigger CI to verify PR changes
+- ✅ PRs require approval to merge
+- ✅ **CI runs automatically** when PR is opened or updated
 - ✅ Status checks must pass before merge button enables
 - ✅ After merge, CI runs automatically for verification
-- ✅ New commits dismiss approval and require re-check
-- ✅ Only you can approve and trigger CI for PRs
-- Only merge PRs after confirming all checks have passed
-
-If you want automatic blocking, you would need to revert to automatic triggers, but this will incur CI costs on every push.
+- ✅ New commits trigger CI automatically and may dismiss approval
+- ✅ All contributors get automatic CI feedback
 
 ### Troubleshooting
 
-**Issue:** Can't find the "Run workflow" button
-- **Solution:** Only repository collaborators with write access can manually trigger workflows. Ensure you're logged in and have the necessary permissions.
+**Issue:** CI doesn't run automatically on PR
+- **Solution:** Check that the PR targets `main` or a `release-*` branch. PRs to other branches won't trigger CI automatically.
 
 **Issue:** Workflow fails with permission errors
 - **Solution:** Ensure the repository has GitHub Actions enabled in Settings → Actions → General.
