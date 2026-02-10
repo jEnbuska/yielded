@@ -19,13 +19,13 @@ A TypeScript library for composing and transforming values from synchronous iter
 ## Installation
 
 ```bash
-npm install yielded
+npm install @jenbuska/yielded
 ```
 
 ## Quick Start
 
 ```typescript
-import { Yielded } from "yielded";
+import { Yielded } from "@jenbuska/yielded";
 
 // Simple transformation pipeline
 const result = Yielded.from([1, 2, 3, 4, 5])
@@ -515,7 +515,7 @@ Yielded.from<{x: number}>([]).maxBy((obj) => obj.x)
 ### Real-World Data Processing
 
 ```typescript
-import { Yielded } from "yielded";
+import { Yielded } from "@jenbuska/yielded";
 
 // Paginated API data fetching with parallel processing
 async function getCustomersForOrganization(
@@ -594,7 +594,7 @@ const firstTenFibs = Yielded.from(fibonacci())
 Yielded is written in TypeScript and provides full type inference:
 
 ```typescript
-import { Yielded, type IYielded, type IAsyncYielded } from "yielded";
+import { Yielded, type IYielded, type IAsyncYielded } from "@jenbuska/yielded";
 
 // Types are automatically inferred
 const numbers: IYielded<number> = Yielded.from([1, 2, 3]);

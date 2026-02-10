@@ -304,7 +304,7 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
 
 ### Prerequisites
 
-1. Ensure you have npm publish permissions for the `yielded` package
+1. Ensure you have npm publish permissions for the `@jenbuska/yielded` package
 2. Authenticate with npm:
    ```bash
    npm login
@@ -364,8 +364,8 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
    git tag vX.Y.Z
    git push origin vX.Y.Z
    
-   # Publish to npm
-   npm publish
+   # Publish to npm as a public scoped package
+   npm publish --access public
    ```
    Note: The `prepublishOnly` script will automatically build the package before publishing.
 
