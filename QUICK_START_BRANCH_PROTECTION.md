@@ -12,7 +12,7 @@
 
 ### Step 1: Enable Branch Protection (5-10 minutes)
 
-**Configure for both `main` and `release-*` branches:**
+**Configure for both `main` and `release/*` branches:**
 
 1. Go to https://github.com/jEnbuska/yielded/settings/branches
 2. Click "Add branch protection rule"
@@ -29,8 +29,8 @@
    - ✅ **Restrict who can push to matching branches** (Leave empty for PR-only)
    - Click "Create" or "Save changes"
 
-4. Repeat for `release-*` branches:
-   - Branch name pattern: `release-*`
+4. Repeat for `release/*` branches:
+   - Branch name pattern: `release/*`
    - Apply the exact same settings
    - Click "Create" or "Save changes"
 
@@ -38,7 +38,7 @@
 
 **For Pull Requests to Protected Branches:**
 
-1. ✅ Create PR to `main` or `release-*`
+1. ✅ Create PR to `main` or `release/*`
 2. ✅ **Manually trigger CI** from PR Checks tab
 3. ✅ Wait for all 4 checks to pass
 4. ✅ **Only you can approve** the PR
@@ -66,7 +66,7 @@
 
 ## What This Achieves
 
-✅ **Protected Branches (main & release-*):**
+✅ **Protected Branches (main & release/*):**
 - Cannot push directly - must use PRs
 - Only you can approve PRs
 - Approval dismissed on new commits (automatic re-approval required)

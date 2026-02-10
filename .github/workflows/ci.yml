@@ -10,13 +10,13 @@ on:
       - reopened            # Closed PR is reopened
     branches:
       - main
-      - 'release-*'
+      - 'release/*'
   
   # Automatic trigger when code is pushed to protected branches (after merge)
   push:
     branches:
       - main
-      - 'release-*'
+      - 'release/*'
   
   # Manual trigger from PR UI or Actions tab (backup option)
   workflow_dispatch:
