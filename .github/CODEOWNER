@@ -1,0 +1,7 @@
+# Default owner for everything
+* @jEnbuska
+
+# Specific paths
+/src/** @jEnbuska
+/tests/** @jEnbuska
+/** @jEnbuska

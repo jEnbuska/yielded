@@ -12,7 +12,7 @@ This provides strong quality assurance while optimizing costs.
 
 ### For Pull Requests → Manual Trigger Required
 
-When creating a PR to `main` or `release-*` branches:
+When creating a PR to `main` or `release/*` branches:
 
 1. **You create the PR**
    - Push your branch and open a PR to a protected branch
@@ -56,7 +56,7 @@ When creating a PR to `main` or `release-*` branches:
 When code is merged to protected branches:
 
 1. **PR is merged**
-   - Code is integrated into `main` or `release-*`
+   - Code is integrated into `main` or `release/*`
 
 2. **CI triggers automatically**
    - Workflow runs immediately on push
@@ -83,7 +83,7 @@ git push origin feature/my-feature
 ### Step 2: Open Pull Request
 1. Go to GitHub repository
 2. Click "Compare & pull request" or "New pull request"
-3. Select base: `main` (or `release-*`)
+3. Select base: `main` (or `release/*`)
 4. Select compare: your feature branch
 5. Fill in PR details
 6. Click "Create pull request"
@@ -149,7 +149,7 @@ The easiest way to trigger CI for a PR:
 
 ## Branch Protection Settings
 
-Required settings for `main` and `release-*` branches:
+Required settings for `main` and `release/*` branches:
 
 ✅ **Require a pull request before merging**
 - Required approvals: 1
@@ -218,7 +218,7 @@ The hybrid model optimizes costs by:
 
 ### Scenario 4: Emergency Hotfix
 1. Create hotfix branch
-2. Create PR to `main` or `release-*`
+2. Create PR to `main` or `release/*`
 3. Trigger CI manually
 4. Verify all checks pass
 5. Approve and merge quickly
@@ -230,7 +230,7 @@ The hybrid model optimizes costs by:
 **Problem:** The button doesn't appear in the Checks tab.
 
 **Solution:**
-- Ensure the PR targets `main` or `release-*` branch
+- Ensure the PR targets `main` or `release/*` branch
 - Try refreshing the page
 - Use Actions tab → CI → Run workflow as alternative
 - Only repository owner can see/use this button

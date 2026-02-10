@@ -5,7 +5,7 @@
 GitHub Actions CI workflow has been successfully configured with **automatic triggers**:
 
 1. **Runs AUTOMATICALLY** when PR is opened or updated (pre-merge verification)
-2. **Runs AUTOMATICALLY** after merging to `main` or `release-*` branches (post-merge verification)
+2. **Runs AUTOMATICALLY** after merging to `main` or `release/*` branches (post-merge verification)
 3. **Manual trigger** still available as backup option
 4. **Executes 4 quality checks** in parallel when triggered:
    - ✅ TypeScript Validation (`npm run validate`)
@@ -40,7 +40,7 @@ If you need to manually re-run CI:
 
 ### For Pull Requests to Protected Branches:
 
-1. ✅ **Create PR** to `main` or `release-*` branch
+1. ✅ **Create PR** to `main` or `release/*` branch
 2. ✅ **CI runs automatically** - no action needed!
 3. ✅ **Wait for all 4 checks** to pass (green checkmarks)
 4. ✅ **Get PR approval** (from repository owner if branch protection is configured)
@@ -57,7 +57,7 @@ If you need to manually re-run CI:
 
 CI runs **automatically** in these scenarios:
 - **Pull Requests**: When opened, updated, or marked as ready for review
-- **After Merge**: When code is pushed to `main` or `release-*` branches
+- **After Merge**: When code is pushed to `main` or `release/*` branches
 - **For Everyone**: Any contributor can trigger CI by creating or updating a PR
 
 This provides both pre-merge validation and post-merge verification automatically.
@@ -136,7 +136,7 @@ Branch protection is fully configured when:
 - [ ] PR is merged to `main`
 - [ ] CI workflow has run at least once
 - [ ] Status checks are enabled in branch protection for `main`
-- [ ] Status checks are enabled in branch protection for `release-*`
+- [ ] Status checks are enabled in branch protection for `release/*`
 - [ ] Test PR successfully blocked by failing check
 - [ ] Test PR successfully merged after all checks pass
 
