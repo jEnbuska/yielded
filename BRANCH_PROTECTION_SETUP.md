@@ -41,9 +41,15 @@ All protected branches must:
      - [ ] ☑️ **Dismiss stale pull request approvals when new commits are pushed**
      - [ ] ☑️ **Require review from Code Owners** (optional, if you set up CODEOWNERS file)
    
-   - [ ] ☑️ **Require status checks to pass before merging** (optional, for CI/CD)
-     - If you have GitHub Actions or other CI checks, enable this
+   - [ ] ☑️ **Require status checks to pass before merging** ⚠️ **REQUIRED**
+     - Enable this option
      - [ ] ☑️ **Require branches to be up to date before merging** (recommended)
+     - Search for and select these status checks (they will appear after the first workflow run):
+       - `TypeScript Validation`
+       - `ESLint`
+       - `Prettier Format Check`
+       - `Test Suite`
+     - These checks run automatically via GitHub Actions (see `.github/workflows/ci.yml`)
    
    - [ ] ☑️ **Require conversation resolution before merging** (optional but recommended)
    

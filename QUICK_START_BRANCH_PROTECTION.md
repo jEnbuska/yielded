@@ -33,13 +33,16 @@
    - ✅ Require a pull request before merging
    - ✅ Require approvals: **1**
    - ✅ Dismiss stale pull request approvals when new commits are pushed
+   - ✅ **Require status checks to pass before merging**
+     - Select: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
+     - (These appear after the first CI workflow run)
    - ✅ Do not allow bypassing the above settings
    - Click "Create" or "Save changes"
 
 4. Click "Add branch protection rule" again
 5. For `release-*` branches:
    - Branch name pattern: `release-*`
-   - Apply the same settings as above
+   - Apply the same settings as above (including status checks)
    - Click "Create" or "Save changes"
 
 **Detailed Instructions:** See `BRANCH_PROTECTION_SETUP.md` for complete guide with screenshots descriptions.
@@ -53,9 +56,14 @@ Once branch protection is enabled:
 - All changes must go through a Pull Request
 - You must approve PRs before they can be merged
 - If new commits are pushed after approval, you must re-approve
+- **All CI checks must pass:**
+  - TypeScript Validation (`npm run validate`)
+  - ESLint (`npm run lint`)
+  - Prettier Format Check (`npm run prettier`)
+  - Test Suite (`npm run test`)
 
 ✅ **release-* branches:**
-- Same protection as main
+- Same protection as main (including CI checks)
 - Applies to: release-v1.0.0, release-2024-02-10, etc.
 
 ❌ **What won't work anymore:**
