@@ -1,6 +1,13 @@
 name: CI
 
 on:
+  # Automatic trigger when code is pushed to protected branches (after merge)
+  push:
+    branches:
+      - main
+      - 'release-*'
+  
+  # Manual trigger from PR UI or Actions tab
   workflow_dispatch:
     inputs:
       reason:

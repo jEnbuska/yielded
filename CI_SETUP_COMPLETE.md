@@ -1,58 +1,77 @@
-# CI Setup Complete - Manual Trigger Mode
+# CI Setup Complete - Hybrid Trigger Mode
 
 ## ✅ What Has Been Done
 
-GitHub Actions CI workflow has been successfully created and committed. The workflow:
+GitHub Actions CI workflow has been successfully configured with a **hybrid trigger model**:
 
-1. **Runs MANUALLY on-demand** to reduce unnecessary CI costs
-2. **Executes 4 quality checks** in parallel when triggered:
+1. **Runs AUTOMATICALLY** after merging to `main` or `release-*` branches (post-merge verification)
+2. **Runs MANUALLY** for pull request verification (pre-merge validation)
+3. **Executes 4 quality checks** in parallel when triggered:
    - ✅ TypeScript Validation (`npm run validate`)
    - ✅ ESLint (`npm run lint`)
    - ✅ Prettier Format Check (`npm run prettier`)
    - ✅ Test Suite (`npm run test`)
 
-## 🎮 How to Trigger the Workflow
+## 🎮 How to Trigger CI for Pull Requests
 
-**Only you (repository owner) can manually trigger the workflow:**
+**Only you (repository owner) can manually trigger the workflow for PRs:**
 
+### Option 1: From Pull Request (Recommended)
+1. Open the Pull Request on GitHub
+2. Go to the **Checks** tab
+3. Find the **CI** workflow
+4. Click **"Run workflow"** or **"Re-run jobs"**
+5. Wait for all checks to complete
+
+### Option 2: From Actions Tab
 1. Go to **Actions** tab: https://github.com/jEnbuska/yielded/actions
 2. Click on **CI** workflow in the left sidebar
 3. Click **Run workflow** button (top right)
-4. Select the branch to test
+4. Select the PR branch to test
 5. Optionally add a reason
 6. Click **Run workflow**
 
-## 📋 Recommended Workflow
+## 📋 Complete PR Workflow
 
-### Before Creating a PR:
-1. **Run checks locally** (recommended):
-   ```bash
-   npm run validate && npm run lint && npm run prettier && npm run test
-   ```
+### For Pull Requests to Protected Branches:
 
-2. **Or trigger CI manually** for the branch:
-   - Go to Actions → CI → Run workflow
-   - Select your branch
-   - Click "Run workflow"
+1. ✅ **Create PR** to `main` or `release-*` branch
+2. ✅ **Manually trigger CI** from the PR Checks tab
+3. ✅ **Wait for all 4 checks** to pass (green checkmarks)
+4. ✅ **Repository owner approves** the PR (only you can approve)
+5. ✅ **Merge** the PR
+6. ✅ **CI runs automatically** after merge for verification
 
-### Before Merging a PR:
-1. Manually trigger the CI workflow for the PR branch
-2. Wait for all 4 checks to complete
-3. Verify all checks passed (green checkmarks)
-4. Only then approve and merge the PR
+### If Changes Are Made After Approval:
+- ⚠️ **Approval is automatically dismissed** (stale approval dismissal)
+- ⚠️ **Manually trigger CI again** from PR Checks tab
+- ⚠️ **Wait for all checks to pass** again
+- ⚠️ **Re-approve the PR** before merging
+
+## 🔄 Automatic Runs
+
+CI runs **automatically without manual trigger** when:
+- Code is pushed to `main` branch (after PR merge)
+- Code is pushed to `release-*` branches (after PR merge)
+
+This provides post-merge verification to ensure the integrated code is healthy.
 
 ## ⚠️ Important Notes
 
-### No Automatic Branch Protection
-- **Status checks do NOT automatically block PRs** with manual triggers
-- You must manually verify that CI passed before merging
-- This is intentional to reduce costs
+### Branch Protection Required
+To enforce the workflow:
+1. **Require pull request approvals** (only repository owner)
+2. **Dismiss stale approvals** on new commits
+3. **Require status checks** to pass before merging
+4. **Restrict who can approve PRs** (repository owner only)
 
-### Cost Savings
-- ✅ Workflow only runs when you explicitly trigger it
-- ✅ No automatic runs on every push/commit
-- ✅ You control exactly when CI runs
-- ✅ Significant reduction in GitHub Actions minutes used
+See branch protection setup guide for detailed configuration.
+
+### Cost Optimization
+- ✅ Manual triggering for PRs reduces unnecessary runs
+- ✅ Automatic runs only after merges (not on every commit)
+- ✅ You control when CI runs for PRs
+- ✅ Balanced approach: security + cost savings
 
 ## 🔧 Running Checks Locally (Recommended)
 
