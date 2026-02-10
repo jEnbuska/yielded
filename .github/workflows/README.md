@@ -31,7 +31,7 @@ The workflow runs four parallel jobs:
 ### When CI Runs
 
 #### Automatic Runs for Pull Requests
-CI runs **automatically** for anyone who creates or updates a PR to `main` or `release-*` branches:
+CI runs **automatically** for anyone who creates or updates a PR to `main` or `release/*` branches:
 - ✅ When PR is **opened** (created)
 - ✅ When draft PR is marked as **ready for review**
 - ✅ When new **commits are pushed** to the PR branch
@@ -42,7 +42,7 @@ CI runs **automatically** for anyone who creates or updates a PR to `main` or `r
 #### Automatic Runs After Merge
 CI runs **automatically** when code is pushed to:
 - `main` branch
-- `release-*` branches
+- `release/*` branches
 
 This happens after PRs are merged to verify the integrated code.
 
@@ -59,7 +59,7 @@ CI can still be **manually triggered** if needed:
 
 ### PR Workflow
 
-For pull requests to `main` or `release-*` branches:
+For pull requests to `main` or `release/` branches:
 
 1. ✅ **Create PR** to protected branch
 2. ✅ **CI runs automatically** - no manual trigger needed!
@@ -95,7 +95,7 @@ npm run validate && npm run lint && npm run prettier && npm run test
 
 **Configure these settings in GitHub Settings → Branches:**
 
-For both `main` and `release-*` branch patterns:
+For both `main` and `release/*` branch patterns:
 
 1. ✅ **Require a pull request before merging**
    - Required number of approvals: **1**
@@ -128,7 +128,7 @@ For both `main` and `release-*` branch patterns:
 ### Troubleshooting
 
 **Issue:** CI doesn't run automatically on PR
-- **Solution:** Check that the PR targets `main` or a `release-*` branch. PRs to other branches won't trigger CI automatically.
+- **Solution:** Check that the PR targets `main` or a `release/*` branch. PRs to other branches won't trigger CI automatically.
 
 **Issue:** Workflow fails with permission errors
 - **Solution:** Ensure the repository has GitHub Actions enabled in Settings → Actions → General.

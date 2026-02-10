@@ -6,7 +6,7 @@ This document provides step-by-step instructions for configuring branch protecti
 
 The following branches require protection:
 - `main` - The primary branch
-- `release-*` - Any branch starting with "release-"
+- `release/*` - Any branch starting with "release/"
 
 ## Protection Rules Required
 
@@ -71,12 +71,12 @@ All protected branches must:
    - Scroll to the bottom
    - Click **Create** or **Save changes**
 
-### Part 2: Protect `release-*` Branches
+### Part 2: Protect `release/*` Branches
 
 1. **Add Another Branch Protection Rule**
    - Still in Settings → Branches
    - Click **Add branch protection rule** again
-   - In the "Branch name pattern" field, enter: `release-*`
+   - In the "Branch name pattern" field, enter: `release/*`
    - The asterisk `*` is a wildcard that matches any characters
 
 2. **Configure the Same Settings**
@@ -150,11 +150,11 @@ Create `.github/CODEOWNERS` to automatically request reviews:
 
 ### 3. Set Up Branch Naming Convention
 For release branches, consider using:
-- `release-v1.0.0`
-- `release-2024-02-10`
-- `release-feature-name`
+- `release/v1.0.0`
+- `release/2024-02-10`
+- `release/feature-name`
 
-All these will be protected by the `release-*` pattern.
+All these will be protected by the `release/*` pattern.
 
 ---
 
@@ -177,7 +177,7 @@ All these will be protected by the `release-*` pattern.
 ## Summary Checklist
 
 - [ ] Branch protection rule created for `main`
-- [ ] Branch protection rule created for `release-*`
+- [ ] Branch protection rule created for `release/*`
 - [ ] Require pull request before merging: **Enabled**
 - [ ] Required approvals: **1** (by @jEnbuska)
 - [ ] Dismiss stale approvals: **Enabled**
