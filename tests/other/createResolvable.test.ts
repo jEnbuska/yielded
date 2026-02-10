@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { PromiseWithResolvers } from "../../src/general/utils/createResolvable.ts";
 import "../utils/initTestPolyfills.ts";
-describe("createResolvable", () => {
+
+describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("resolve", async () => {
     {
       const polyfill = new PromiseWithResolvers<number>();

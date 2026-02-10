@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import "../utils/initTestPolyfills.ts";
+
 describe("sources", () => {
   const numbers = [1, 2, 3];
   function* generatorFunction() {
@@ -23,7 +24,7 @@ describe("sources", () => {
     );
   });
 
-  test("Iterator", () => {
+  test.skipIf(!global.Iterator)("Iterator", () => {
     expect(
       Yielded.from(Iterator.from(numbers)).toArray() satisfies number[],
     ).toStrictEqual(numbers);

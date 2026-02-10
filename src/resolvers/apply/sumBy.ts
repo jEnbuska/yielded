@@ -3,6 +3,7 @@ import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
 import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
+import { reduceSync } from "./reduce.ts";
 
 export interface IYieldedSumBy<T, TFlow extends IYieldedFlow> {
   /**
@@ -27,7 +28,7 @@ export function sumBySync<T>(
   generator: IYieldedSyncGenerator<T>,
   mapper: (next: T) => number,
 ): number {
-  return generator.reduce((acc, next) => mapper(next) + acc, 0);
+  return reduceSync(generator, (acc, next) => mapper(next) + acc, 0);
 }
 
 export async function sumByAsync<T>(

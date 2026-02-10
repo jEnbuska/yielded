@@ -3,6 +3,7 @@ import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
 import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
+import { reduceSync } from "./reduce.ts";
 
 export interface IYieldedCount<TFlow extends IYieldedFlow> {
   /**
@@ -26,7 +27,7 @@ function counter(_acc: unknown, _next: unknown, index: number) {
   return index + 1;
 }
 export function countSync(generator: IYieldedSyncGenerator<any>): number {
-  return generator.reduce(counter, 0);
+  return reduceSync(generator, counter, 0);
 }
 
 export async function countAsync(
