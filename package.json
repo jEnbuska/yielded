@@ -16,7 +16,7 @@
   "scripts": {
     "validate": "tsc --noEmit",
     "validate:watch": "tsc --watch",
-    "build": "tsup",
+    "build": "tsup && tsc --project tsconfig.build.json",
     "test": "USE_POLYFILLS=true vitest run --coverage && vitest run --coverage",
     "test:watch": "vitest --ui",
     "lint": "eslint --ext .ts --max-warnings 0 ./src",
