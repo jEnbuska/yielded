@@ -1,4 +1,3 @@
-import type { IMaybeAsync } from "../../general/types.ts";
 import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import type { IDisposableParent } from "../../generators/types.ts";
 import { consumeSync } from "../apply/consume.ts";
@@ -11,7 +10,7 @@ import { groupBySync } from "../apply/groupBy.ts";
 import { lastSync } from "../apply/last.ts";
 import { maxBySync } from "../apply/maxBy.ts";
 import { minBySync } from "../apply/minBy.ts";
-import { reduceAsync, reduceSync } from "../apply/reduce.ts";
+import { reduceAsync } from "../apply/reduce.ts";
 import someSync from "../apply/some.ts";
 import { sumBySync } from "../apply/sumBy.ts";
 import { toArraySync } from "../apply/toArray.ts";

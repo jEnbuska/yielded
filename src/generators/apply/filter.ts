@@ -3,7 +3,7 @@ import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IParallelGeneratorSubConfig } from "../parallel/types.ts";
 import type { IYieldedSyncGenerator } from "../sync/types.ts";
-import type { ICallbackReturn, IYieldedGenerator } from "../types.ts";
+import type { ICallbackReturn } from "../types.ts";
 
 export interface IYieldedFilter<T, TFlow extends IYieldedFlow> {
   /**
