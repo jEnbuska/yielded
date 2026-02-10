@@ -30,6 +30,7 @@
 - [ ] Added new tests for new functionality
 - [ ] Manually tested the changes
 - [ ] Linting passes (`npm run lint`)
+- [ ] Prettier is happy (`npm run prettier`)
 - [ ] Type checking passes (`npm run validate`)
 
 ## Checklist

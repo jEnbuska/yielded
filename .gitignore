@@ -3,5 +3,7 @@ dist
 node_modules
 .DS_Store
 *.js
+!eslint.config.js
+!tsup.config.ts
 
 coverage
