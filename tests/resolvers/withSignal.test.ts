@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 const createAbortedSet = () =>
   createTestSets([1, 2, 3, 4, 5]).modes.map(({ yielded, mode }) => {
     const controller = new AbortController();

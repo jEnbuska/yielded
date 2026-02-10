@@ -1,5 +1,7 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
 
@@ -34,6 +36,24 @@ export interface IYieldedSome<T, TFlow extends IYieldedFlow> {
     predicate: (next: T, index: number) => unknown,
   ): IResolverReturn<boolean, TFlow>;
 }
+
+function someSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (value: T, index: number) => unknown,
+): boolean {
+  if (hasNative(generator, "some")) {
+    return generator.some(predicate);
+  }
+  let index = 0;
+  for (const next of generator) {
+    // Do not perform predicates, since we might want to stop at any point
+    if (predicate(next, index++)) return true;
+  }
+  return false;
+}
+
+export default someSync;
+
 export async function someAsync<T>(
   generator: IYieldedAsyncGenerator<T>,
   predicate: (value: T, index: number) => unknown,

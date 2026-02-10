@@ -3,8 +3,10 @@ import type {
   INextYielded,
   IYieldedFlow,
 } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IParallelGeneratorSubConfig } from "../parallel/types.ts";
+import type { IYieldedSyncGenerator } from "../sync/types.ts";
 import type { ICallbackReturn } from "../types.ts";
 
 export interface IYieldedMap<T, TFlow extends IYieldedFlow> {
@@ -25,7 +27,18 @@ export interface IYieldedMap<T, TFlow extends IYieldedFlow> {
     mapper: (next: T, index: number) => ICallbackReturn<TOut, TFlow>,
   ): INextYielded<TOut, TFlow>;
 }
-
+export function* mapSync<T, TOut>(
+  generator: IYieldedSyncGenerator<T>,
+  mapper: (next: T, index: number) => TOut,
+): IYieldedSyncGenerator<TOut> {
+  if (hasNative(generator, "map")) {
+    return yield* generator.map(mapper);
+  }
+  let index = 0;
+  for (const next of generator) {
+    yield mapper(next, index++);
+  }
+}
 export async function* mapAsync<T, TOut>(
   generator: IYieldedAsyncGenerator<T>,
   mapper: (next: T, index: number) => IMaybeAsync<TOut>,

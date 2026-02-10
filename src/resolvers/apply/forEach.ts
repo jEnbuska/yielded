@@ -1,5 +1,7 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
 
@@ -29,6 +31,18 @@ export interface IYieldedForEach<T, TFlow extends IYieldedFlow> {
   forEach(
     cb: (next: T, index: number) => unknown,
   ): IResolverReturn<void, TFlow>;
+}
+
+export function forEachSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  callback: (next: T, index: number) => unknown,
+): void {
+  if (hasNative(generator, "forEach")) {
+    generator.forEach(callback);
+    return;
+  }
+  let index = 0;
+  for (const next of generator) callback(next, index++);
 }
 
 export async function forEachAsync<T>(

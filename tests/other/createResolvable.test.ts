@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { PromiseWithResolvers } from "../../src/general/utils/createResolvable.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("createResolvable", () => {
   test("resolve", async () => {
     {

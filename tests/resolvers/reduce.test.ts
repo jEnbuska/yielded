@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { IYieldedFlow } from "../../src/general/types.ts";
 import type { IYieldedReduce } from "../../src/resolvers/apply/reduce.ts";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("reduce", () => {
   describe("sum chainable", () => {
     createTestSets([1, 2, 3]).modes.forEach(({ yielded, mode }) => {

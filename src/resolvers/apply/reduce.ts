@@ -1,6 +1,8 @@
 import type { IMaybeAsync, IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import { throttle } from "../../general/utils/parallel.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import type { ICallbackReturn } from "../../generators/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
@@ -61,6 +63,43 @@ export interface IYieldedReduce<T, TFlow extends IYieldedFlow> {
   ): IResolverReturn<T, TFlow>;
 }
 
+export function reduceSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  reducer: (acc: T, next: T, index: number) => T,
+): T;
+export function reduceSync<T, TOut>(
+  generator: IYieldedSyncGenerator<T>,
+  reducer: (acc: TOut, next: T, index: number) => TOut,
+  initialValue: TOut,
+): TOut;
+export function reduceSync(
+  generator: IYieldedSyncGenerator,
+  reducer: (acc: unknown, next: unknown, index: number) => unknown,
+  ...rest: [unknown] | []
+): unknown {
+  if (hasNative(generator, "reduce")) {
+    // @ts-ignore
+    return generator.reduce(reducer, ...rest);
+  }
+  let acc: unknown;
+  if (rest.length) {
+    acc = rest[0];
+  } else {
+    const first = generator.next();
+    if (first.done) {
+      throw new TypeError(
+        `Yielded.reduce requires an initial value or an iterator that is not done.`,
+      );
+    }
+    acc = first.value;
+  }
+  let index = 0;
+  for (const next of generator) {
+    acc = reducer(acc, next, index++);
+  }
+  return acc;
+}
+
 export async function reduceAsync<T>(
   generator: IYieldedAsyncGenerator<T>,
   reducer: (acc: T, next: T, index: number) => IMaybeAsync<T>,
@@ -80,10 +119,11 @@ export async function reduceAsync(
     acc = Promise.resolve(rest[0]);
   } else {
     const first = await generator.next();
-    if (first.done)
+    if (first.done) {
       throw new TypeError(
         `AsyncYielded.reduce requires an initial value or an iterator that is not done.`,
       );
+    }
     acc = Promise.resolve(first.value);
   }
   let index = 0;

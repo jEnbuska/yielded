@@ -1,5 +1,7 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import type { ICallbackReturn } from "../../generators/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
@@ -32,6 +34,28 @@ export interface IYieldedFind<T, TFlow extends IYieldedFlow> {
   find(
     predicate: (next: T) => ICallbackReturn<unknown, TFlow>,
   ): IResolverReturn<T | undefined, TFlow>;
+}
+
+export function findSync<T, TOut extends T = T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (value: T, index: number) => value is TOut,
+): TOut | undefined;
+export function findSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (value: T, index: number) => unknown,
+): T | undefined;
+export function findSync(
+  generator: IYieldedSyncGenerator,
+  predicate: (value: unknown, index: number) => unknown,
+): unknown | undefined {
+  if (hasNative(generator, "find")) {
+    return generator.find(predicate);
+  }
+  const index = 0;
+  for (const next of generator) {
+    // Do not perform predicates, since we might want to stop at any point
+    if (predicate(next, index)) return next;
+  }
 }
 
 export function findAsync<T, TOut extends T = T>(

@@ -1,6 +1,8 @@
 import type { INextYielded, IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IParallelGeneratorSubConfig } from "../parallel/types.ts";
+import type { IYieldedSyncGenerator } from "../sync/types.ts";
 
 export interface IYieldedDrop<T, TFlow extends IYieldedFlow> {
   /**
@@ -29,6 +31,22 @@ export interface IYieldedDrop<T, TFlow extends IYieldedFlow> {
    * ```
    */
   drop(count: number): INextYielded<T, TFlow>;
+}
+
+export function* dropSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  count: number,
+): IYieldedSyncGenerator<T> {
+  if (hasNative(generator, "drop")) {
+    return yield* generator.drop(count);
+  }
+  for (const next of generator) {
+    if (count) {
+      count--;
+      continue;
+    }
+    yield next;
+  }
 }
 
 export async function* dropAsync<T>(

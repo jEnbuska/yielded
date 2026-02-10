@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("takeLast", () => {
   describe("take last when empty", () => {
     createTestSets([]).modes.forEach(({ mode, yielded }) => {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { throttle } from "../../src/general/utils/parallel.ts";
 import { delay } from "../utils/delay.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("throttle", () => {
   test("throttle limits concurrent calls", async () => {
     const throttled = throttle(1, (value: number) => delay(value, 100));

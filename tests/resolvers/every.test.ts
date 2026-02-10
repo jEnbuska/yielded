@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("every", () => {
   describe("has some", () => {
     createTestSets([false, true, false]).modes.forEach(({ mode, yielded }) => {

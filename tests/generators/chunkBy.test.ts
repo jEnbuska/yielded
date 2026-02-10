@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("chunkBy", () => {
   describe("chunkBy numbers", () => {
     createTestSets([1, 2, 3, 4, 5]).modes.forEach(({ mode, yielded }) => {

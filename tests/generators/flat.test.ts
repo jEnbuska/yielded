@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import type { INextYielded, IYieldedFlow } from "../../src/general/types.ts";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
-
-/* Verify typing after flatmap is expected */
+import "../utils/initTestPolyfills.ts";
+/* Verify typing after flat is expected */
 function verify<T>() {
   return (_: T) => {};
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("sources", () => {
   const numbers = [1, 2, 3];
   function* generatorFunction() {

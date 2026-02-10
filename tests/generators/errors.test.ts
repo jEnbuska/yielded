@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("errors", () => {
   describe("should throw error to the callee of last generator middleware", () => {
     createTestSets([1]).modes.forEach(({ mode, yielded }) => {

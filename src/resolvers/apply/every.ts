@@ -1,5 +1,7 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
 
@@ -34,6 +36,21 @@ export interface IYieldedEvery<T, TFlow extends IYieldedFlow> {
   every(
     predicate: (next: T, index: number) => unknown,
   ): IResolverReturn<boolean, TFlow>;
+}
+
+export function everySync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (value: T, index: number) => unknown,
+): boolean {
+  if (hasNative(generator, "every")) {
+    return generator.every(predicate);
+  }
+  let index = 0;
+  for (const next of generator) {
+    // Do not perform predicates, since we might want to stop at any point
+    if (!predicate(next, index++)) return false;
+  }
+  return true;
 }
 
 export async function everyAsync<T>(

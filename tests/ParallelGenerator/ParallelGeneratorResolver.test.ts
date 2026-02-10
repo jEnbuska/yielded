@@ -4,7 +4,7 @@ import {
   MockDelayedValuesGenerator,
   MockIYieldedParallelGenerator,
 } from "../utils/MockGenerators.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("ParallelGeneratorResolver", () => {
   test("Empty parallel 1", async () => {
     const result = await ParallelGeneratorResolver.run<number, boolean>({

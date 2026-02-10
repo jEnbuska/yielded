@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
 import { simpleMock } from "../utils/simpleMock.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("takeWhile", () => {
   const numbers = [-2, -1, 0, 1, 2];
   describe("takeWhile negative", () => {

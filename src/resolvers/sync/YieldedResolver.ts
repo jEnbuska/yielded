@@ -1,14 +1,22 @@
+import type { IMaybeAsync } from "../../general/types.ts";
 import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import type { IDisposableParent } from "../../generators/types.ts";
 import { consumeSync } from "../apply/consume.ts";
 import { countSync } from "../apply/count.ts";
+import { everySync } from "../apply/every.ts";
+import { findSync } from "../apply/find.ts";
 import { firstSync } from "../apply/first.ts";
+import { forEachSync } from "../apply/forEach.ts";
 import { groupBySync } from "../apply/groupBy.ts";
 import { lastSync } from "../apply/last.ts";
 import { maxBySync } from "../apply/maxBy.ts";
 import { minBySync } from "../apply/minBy.ts";
+import { reduceAsync, reduceSync } from "../apply/reduce.ts";
+import someSync from "../apply/some.ts";
 import { sumBySync } from "../apply/sumBy.ts";
+import { toArraySync } from "../apply/toArray.ts";
 import { toReversedSync } from "../apply/toReversed.ts";
+import { toSetSync } from "../apply/toSet.ts";
 import { toSortedSync } from "../apply/toSorted.ts";
 import { ResolversDisposableParent } from "../ResolversDisposableParent.ts";
 import type { IYieldedResolver } from "./types.ts";
@@ -59,7 +67,7 @@ export class YieldedResolver<T>
   forEach(
     ...args: Parameters<IYieldedResolver<T>["forEach"]>
   ): ReturnType<IYieldedResolver<T>["forEach"]> {
-    return this.generator.forEach(...args);
+    this.#apply(forEachSync, ...args);
   }
 
   reduce<TOut>(
@@ -67,40 +75,37 @@ export class YieldedResolver<T>
     initialValue: TOut,
   ): TOut;
 
+  // @ts-ignore
   reduce(reducer: (acc: T, next: T, index: number) => T): T;
 
-  reduce(...args: Parameters<IYieldedResolver<T>["reduce"]>) {
-    using generator = this.generator;
-    return generator.reduce(...args);
+  reduce(...args: unknown[]) {
+    // @ts-expect-error
+    return this.#apply(reduceAsync, ...args);
   }
 
   toArray() {
-    using generator = this.generator;
-    return generator.toArray();
+    return this.#apply(toArraySync);
   }
 
   toSet() {
-    using generator = this.generator;
-    return new Set(generator);
+    return this.#apply(toSetSync);
   }
 
   find<TOut extends T>(predicate: (next: T) => next is TOut): TOut | undefined;
 
   find(predicate: (next: T) => unknown): T | undefined;
 
-  find(...args: Parameters<IYieldedResolver<T>["find"]>) {
-    using generator = this.generator;
-    return generator.find(...args);
+  find(...args: unknown[]) {
+    // @ts-ignore
+    return this.#apply(findSync, ...args);
   }
 
   some(...args: Parameters<IYieldedResolver<T>["some"]>) {
-    using generator = this.generator;
-    return generator.some(...args);
+    return this.#apply(someSync, ...args);
   }
 
   every(...args: Parameters<IYieldedResolver<T>["every"]>) {
-    using generator = this.generator;
-    return generator.every(...args);
+    return this.#apply(everySync, ...args);
   }
 
   toSorted(...args: Parameters<IYieldedResolver<T>["toSorted"]>) {

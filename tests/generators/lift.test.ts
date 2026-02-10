@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("lift", () => {
   test("lift mapper", () => {
     const array = Yielded.from([1, 2, 3])

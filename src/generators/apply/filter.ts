@@ -1,7 +1,9 @@
 import type { INextYielded, IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IParallelGeneratorSubConfig } from "../parallel/types.ts";
-import type { ICallbackReturn } from "../types.ts";
+import type { IYieldedSyncGenerator } from "../sync/types.ts";
+import type { ICallbackReturn, IYieldedGenerator } from "../types.ts";
 
 export interface IYieldedFilter<T, TFlow extends IYieldedFlow> {
   /**
@@ -33,6 +35,27 @@ export interface IYieldedFilter<T, TFlow extends IYieldedFlow> {
   filter(
     predicate: (next: T, index: number) => ICallbackReturn<unknown, TFlow>,
   ): INextYielded<T, TFlow>;
+}
+
+export function filterSync<T, TOut extends T = T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (next: T, index: number) => next is TOut,
+): IYieldedSyncGenerator<TOut>;
+export function filterSync<T>(
+  generator: IYieldedSyncGenerator<T>,
+  predicate: (next: T, index: number) => unknown,
+): IYieldedSyncGenerator<T>;
+export function* filterSync(
+  generator: IYieldedSyncGenerator,
+  predicate: (next: unknown, index: number) => unknown,
+): IYieldedSyncGenerator {
+  if (hasNative(generator, "filter")) {
+    return yield* generator.filter(predicate);
+  }
+  let index = 0;
+  for (const next of generator) {
+    if (predicate(next, index++)) yield next;
+  }
 }
 
 export function filterAsync<T, TOut extends T = T>(

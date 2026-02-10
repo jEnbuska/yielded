@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("count", () => {
   const numbers = [1, 2, 3];
   const { empty, modes } = createTestSets(numbers);

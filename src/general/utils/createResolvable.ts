@@ -2,12 +2,17 @@ import {
   getEmptySlot,
   isEmptySlot,
 } from "../../resolvers/apply/utils/emptySlot.ts";
+import { Yielded } from "../../sync/Yielded.ts";
+import { hasNative } from "./hasNative.ts";
 
 export function createResolvable<T = void>(): {
   promise: Promise<T>;
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: any) => void;
 } {
+  if (hasNative(Promise, "withResolvers") && !Yielded.__USE_POLYFILL_ONLY__) {
+    return Promise.withResolvers<T>();
+  }
   return new PromiseWithResolvers<T>();
 }
 

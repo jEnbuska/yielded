@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("mapPairwise", () => {
   const expected = [3, 0, 0, 1];
   const modulo4 = (a: number, b: number) => (a + b) % 4;

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets } from "../utils/createTestSets.ts";
 import { simpleMock } from "../utils/simpleMock.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("tap", () => {
   const numbers = [1, 2];
 

@@ -1,5 +1,7 @@
 import type { IYieldedFlow } from "../../general/types.ts";
+import { hasNative } from "../../general/utils/hasNative.ts";
 import type { IYieldedAsyncGenerator } from "../../generators/async/types.ts";
+import type { IYieldedSyncGenerator } from "../../generators/sync/types.ts";
 import { type IParallelResolverSubConfig } from "../parallel/ParallelGeneratorResolver.ts";
 import type { IResolverReturn } from "../types.ts";
 
@@ -13,6 +15,14 @@ export interface IYieldedToArray<T, TFlow extends IYieldedFlow> {
    * The generator is fully consumed before the array is returned.
    * */
   toArray(): IResolverReturn<T[], TFlow>;
+}
+export function toArraySync<T>(generator: IYieldedSyncGenerator<T>): T[] {
+  if (hasNative(generator, "toArray")) return generator.toArray();
+  const arr: T[] = [];
+  for (const next of generator) {
+    arr.push(next);
+  }
+  return arr;
 }
 
 export async function toArrayAsync<T>(

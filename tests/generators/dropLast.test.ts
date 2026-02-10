@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src";
 import { createTestSets } from "../utils/createTestSets.ts";
-
+import "../utils/initTestPolyfills.ts";
 describe("dropLast", () => {
   describe("drop last when array is empty", () => {
     createTestSets<number>([]).modes.forEach(({ mode, yielded }) => {

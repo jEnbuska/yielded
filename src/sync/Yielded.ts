@@ -4,14 +4,18 @@ import type { IMaybeAsync, IYieldedIterableSource } from "../general/types.ts";
 import { syncToAwaited } from "../generators/apply/awaited.ts";
 import { batchSync } from "../generators/apply/batch.ts";
 import { chunkBySync } from "../generators/apply/chunkBy.ts";
+import { dropSync } from "../generators/apply/drop.ts";
 import { dropLastSync } from "../generators/apply/dropLast.ts";
+import { filterSync } from "../generators/apply/filter.ts";
 import { flatSync } from "../generators/apply/flat.ts";
 import { flatMapSync } from "../generators/apply/flatMap.ts";
 import { liftSync } from "../generators/apply/lift.ts";
+import { mapSync } from "../generators/apply/map.ts";
 import { mapPairwiseSync } from "../generators/apply/mapPairwise.ts";
 import { parallel } from "../generators/apply/parallel.ts";
 import { reversedSync } from "../generators/apply/reversed.ts";
 import { sortedSync } from "../generators/apply/sorted.ts";
+import { takeSync } from "../generators/apply/take.ts";
 import { takeLastSync } from "../generators/apply/takeLast.ts";
 import { takeWhileSync } from "../generators/apply/takeWhile.ts";
 import { tapSync } from "../generators/apply/tap.ts";
@@ -29,6 +33,9 @@ import type { ISharedYieldedResolver } from "../resolvers/types.ts";
 import type { IYielded } from "./types.ts";
 
 export class Yielded<T> extends YieldedResolver<T> implements IYielded<T> {
+  /** Variable for testing purposes. If set to `true`, it forces the use of polyfill implementations for all operators, even if native implementations are available. This can be useful for testing the correctness and performance of the polyfill versions in environments that support native implementations. */
+  static __USE_POLYFILL_ONLY__ = false;
+
   private constructor(
     parent: IDisposableParent,
     generator: IYieldedSyncGenerator<T>,
@@ -109,21 +116,23 @@ export class Yielded<T> extends YieldedResolver<T> implements IYielded<T> {
 
   filter(predicate: (next: T, index: number) => unknown): IYielded<T>;
 
-  filter(predicate: (next: T, index: number) => unknown) {
-    return new Yielded(this.generator, this.generator.filter(predicate));
+  filter(...args: unknown[]) {
+    // @ts-ignore
+    return this.#next(filterSync, ...args);
   }
 
   map<TOut>(mapper: (next: T, index: number) => TOut): IYielded<TOut> {
-    return new Yielded(this.generator, this.generator.map(mapper));
+    return this.#next(mapSync, mapper);
   }
 
-  drop(...args: Parameters<IYielded<T>["drop"]>): IYielded<T> {
-    return new Yielded(this.generator, this.generator.drop(...args));
+  drop(count: number): IYielded<T> {
+    assertNotNegative(count);
+    return this.#next(dropSync, count);
   }
 
-  take(...args: Parameters<IYielded<T>["take"]>) {
-    this.generator.take(...args);
-    return new Yielded(this.generator, this.generator.take(...args));
+  take(count: number) {
+    assertNotNegative(count);
+    return this.#next(takeSync, count);
   }
 
   flat<Depth extends number = 1>(
