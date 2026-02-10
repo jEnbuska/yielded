@@ -16,6 +16,10 @@ import { takeAsync } from "../generators/apply/take.ts";
 import { takeLastAsync } from "../generators/apply/takeLast.ts";
 import { takeWhileAsync } from "../generators/apply/takeWhile.ts";
 import { tapAsync } from "../generators/apply/tap.ts";
+import {
+  isAsyncIterable,
+  isIterable,
+} from "../generators/apply/utils/iteration.ts";
 import { assertNotNegative } from "../generators/apply/utils/take.ts";
 import type { IYieldedAsyncGenerator } from "../generators/async/types.ts";
 import type { IDisposableParent } from "../generators/types.ts";
@@ -24,10 +28,6 @@ import type { IParallelYielded } from "../parallel/types.ts";
 import { AsyncYieldedResolver } from "../resolvers/async/AsyncYieldedResolver.ts";
 import type { ISharedYieldedResolver } from "../resolvers/types.ts";
 import type { IAsyncYielded } from "./types.ts";
-import {
-  isAsyncIterable,
-  isIterable,
-} from "../generators/apply/utils/iteration.ts";
 
 export class AsyncYielded<T>
   extends AsyncYieldedResolver<T>
