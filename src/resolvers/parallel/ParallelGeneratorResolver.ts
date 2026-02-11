@@ -146,7 +146,9 @@ export class ParallelGeneratorResolver<T, TReturn> {
 
   #handleNext = async (result: IteratorResult<T, void>) => {
     if (result.done) {
-      this.#state = "depleted";
+      if (this.#state === "running") {
+        this.#state = "depleted";
+      }
     } else {
       await this.#onNext?.(result.value, this.#resolve);
     }

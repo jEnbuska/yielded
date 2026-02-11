@@ -16,6 +16,23 @@ A TypeScript library for composing and transforming values from synchronous iter
 - 🎯 **Cancelable** - Integrated AbortSignal support for canceling async operations
 - 🌊 **Composable** - Chain multiple operations together for complex data transformations
 
+## Compatibility
+
+**⚠️ Important: Node.js and Browser Requirements**
+
+This library requires **Node.js 20.5.0 or newer** because it uses ES2023 features including:
+- The `using` keyword for [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management)
+- `Symbol.dispose` and `Symbol.asyncDispose` for automatic cleanup
+
+**Browser Support:**
+- ✅ **Modern Browsers**: Chrome 90+, Firefox 88+, Edge 90+ (with full ES2022+ support)
+- ⚠️ **Safari & Older Browsers**: May require polyfills or transpilation with [Babel](https://babeljs.io/) to support the `using` keyword and disposal symbols
+
+If you need to support older browsers or Safari versions without native support for these features, you will need to:
+1. Use Babel with appropriate plugins to transpile the `using` keyword
+2. Include polyfills for `Symbol.dispose` and `Symbol.asyncDispose`
+3. Configure your build toolchain to target the appropriate JavaScript version
+
 ## Installation
 
 ```bash
@@ -627,8 +644,17 @@ const asyncNumbers: IAsyncYielded<number> = Yielded.from(asyncGenerator());
 
 ## Browser and Node.js Support
 
-- **Node.js**: 20+ (ES2022 support required)
-- **Browsers**: Modern browsers with ES2022 support (Chrome 90+, Firefox 88+, Safari 15+, Edge 90+)
+**Node.js:**
+- **Minimum version: 20.5.0+** (required for `using` keyword and disposal symbols)
+- ES2023 features support required
+
+**Browsers:**
+- **Modern browsers** with ES2022+ support: Chrome 90+, Firefox 88+, Edge 90+
+- **Safari & Legacy browsers**: Require polyfills or Babel transpilation for:
+  - `using` keyword (Explicit Resource Management)
+  - `Symbol.dispose` and `Symbol.asyncDispose`
+
+For production use with broad browser support, configure your build pipeline with Babel and appropriate polyfills.
 
 ## Contributing
 
