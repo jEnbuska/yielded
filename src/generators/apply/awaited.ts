@@ -55,7 +55,7 @@ export async function* parallelToAwaited<T>(
     name: "consume",
     generator,
     signal,
-    parallel: parallel,
+    parallel,
     async onNext(value) {
       buffer.push(value);
       consumerResolvable.resolve();
