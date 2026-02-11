@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-11
+
+### Added
+- Comprehensive compatibility documentation in README
+- Clear Node.js version requirement (20.5.0+) highlighting
+- Browser support information with polyfill/Babel guidance for older browsers and Safari
+- Documentation about ES2023 features (`using` keyword, `Symbol.dispose`, `Symbol.asyncDispose`)
+
 ## [1.0.1] - 2026-02-11
 
 ### Fixed
@@ -37,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test coverage
 - Full API documentation in README
 
-[Unreleased]: https://github.com/jEnbuska/yielded/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/jEnbuska/yielded/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/jEnbuska/yielded/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/jEnbuska/yielded/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/jEnbuska/yielded/releases/tag/v1.0.0
