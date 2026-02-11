@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-02-11
+
+### Fixed
+- Fixed bug in ParallelGenerator that was dropping values when using flatMap with async generators
+- Fixed type definitions for async flat operations to properly handle awaited values
+
+### Changed
+- Improved handling of promise values in flat operations
+- Refactored ParallelGenerator to remove overlapping code and improve reliability
+
 ## [1.0.0] - TBD
 
 ### Added
@@ -27,5 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test coverage
 - Full API documentation in README
 
-[Unreleased]: https://github.com/jEnbuska/yielded/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/jEnbuska/yielded/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/jEnbuska/yielded/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/jEnbuska/yielded/releases/tag/v1.0.0
