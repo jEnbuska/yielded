@@ -1,4 +1,8 @@
-import type { INextYielded, IYieldedFlow } from "../../general/types.ts";
+import type {
+  IMaybeAwaited,
+  INextYielded,
+  IYieldedFlow,
+} from "../../general/types.ts";
 import type { IYieldedAsyncGenerator } from "../async/types.ts";
 import type { IParallelGeneratorSubConfig } from "../parallel/types.ts";
 import type { IYieldedSyncGenerator } from "../sync/types.ts";
@@ -32,16 +36,14 @@ export interface IYieldedFlat<T, TFlow extends IYieldedFlow> {
    */
   flat<Depth extends number = 1>(
     depth?: Depth,
-  ): INextYielded<FlatArray<T[], Depth>, TFlow>;
+  ): INextYielded<IMaybeAwaited<FlatArray<T[], Depth>, TFlow>, TFlow>;
 }
 
 function nextToFlat<T, const Depth extends number = 1>(
   next: T,
   depth: Depth,
 ): Array<FlatArray<T[], Depth>> {
-  if (!Array.isArray(next) || depth <= 0) {
-    return [next] as any;
-  }
+  if (!Array.isArray(next) || depth <= 0) return [next] as any;
   return next.flat(depth - 1) as any;
 }
 
@@ -56,17 +58,17 @@ export function* flatSync<T, const Depth extends number = 1>(
 export async function* flatAsync<T, const Depth extends number = 1>(
   generator: IYieldedAsyncGenerator<T>,
   depth?: Depth,
-): IYieldedAsyncGenerator<FlatArray<T[], Depth>> {
+): IYieldedAsyncGenerator<Awaited<FlatArray<T[], Depth>>> {
   depth = depth ?? (1 as Depth);
   for await (const next of generator) yield* nextToFlat(next, depth);
 }
 
 export function flatParallel<T, const Depth extends number = 1>(
   depth?: Depth,
-): IParallelGeneratorSubConfig<T, FlatArray<T[], Depth>> {
+): IParallelGeneratorSubConfig<T, Awaited<FlatArray<T[], Depth>>> {
   depth = depth ?? (1 as Depth);
   return {
     name: "flat",
-    onNext: (next) => nextToFlat(next, depth),
+    onNext: (next) => nextToFlat(next, depth) as any,
   };
 }
