@@ -49,28 +49,35 @@ export async function* parallelToAwaited<T>(
 ): IYieldedAsyncGenerator<Awaited<T>> {
   let done = false;
   const buffer: T[] = [];
-  let resolvable = createResolvable<void>();
-  using _ = ParallelGeneratorResolver.run<T, void>({
+  let consumerResolvable = createResolvable<void>();
+  let producerResolvable = createResolvable<void>();
+  void ParallelGeneratorResolver.run<T, void>({
     name: "consume",
     generator,
     signal,
     parallel,
-    onNext(value) {
+    async onNext(value) {
       buffer.push(value);
-      resolvable.resolve();
-      resolvable = createResolvable<void>();
+      consumerResolvable.resolve();
+      if (parallel <= buffer.length) {
+        await producerResolvable.promise;
+        producerResolvable = createResolvable();
+      }
     },
     onDone(resolve) {
-      resolvable.resolve();
+      consumerResolvable.resolve();
       resolve();
       done = true;
     },
   });
 
-  while (!done || buffer.length) {
+  while (true) {
     while (buffer.length) {
       yield buffer.shift()!;
+      producerResolvable.resolve();
     }
-    await resolvable.promise;
+    if (done) return;
+    await consumerResolvable.promise;
+    consumerResolvable = createResolvable();
   }
 }

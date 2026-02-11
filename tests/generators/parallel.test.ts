@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { delay } from "../utils/delay.ts";
 import "../utils/initTestPolyfills.ts";
+
 describe("parallel", () => {
   test("Parallel 2, 0 values", async () => {
     const result = (await Yielded.from<number>([])
@@ -77,6 +78,63 @@ describe("parallel", () => {
         .map((it) => delay(it, it))
         .toArray()) satisfies number[];
       expect(result).toStrictEqual([300, 10, 100, 450, 550]);
+    });
+
+    test("Parallel to awaited execution order testing", async () => {
+      const executions: string[] = [];
+      await Yielded.from([1, 2, 3, 4, 5])
+        .parallel(3)
+        .tap((n) => executions.push(`A:${n}`))
+        .map((n, i) => delay(n, 100 + i * 10))
+        .awaited()
+        .tap((n) => executions.push(`B:${n}`))
+        .consume();
+      expect(executions).toStrictEqual(
+        [
+          ["A:1", "A:2", "A:3"],
+          ["B:1", "A:4"],
+          ["B:2", "A:5"],
+          ["B:3", "B:4", "B:5"],
+        ].flat(),
+      );
+    });
+
+    test("Parallel to awaited execution limit testing", async () => {
+      let totalExecutions = 0;
+      let totalMax = 0;
+      let parallelMax = 0;
+      let parallelExecutions = 0;
+      let awaitedMax = 0;
+      let awaitedExecutions = 0;
+      await Yielded.from([1, 2, 3, 4, 5, 6, 7, 8])
+        .parallel(3)
+        .tap(() => {
+          parallelExecutions++;
+          parallelMax = Math.max(parallelExecutions, parallelMax);
+          totalExecutions++;
+          totalMax = Math.max(totalExecutions, totalMax);
+        })
+        .map((n, i) => delay(n, i * 5))
+        .tap(() => {
+          parallelExecutions--;
+          totalExecutions--;
+        })
+        .awaited()
+        .tap(() => {
+          awaitedExecutions++;
+          awaitedMax = Math.max(awaitedExecutions, awaitedMax);
+          totalExecutions++;
+          totalMax = Math.max(totalExecutions, totalMax);
+        })
+        .map((n, i) => delay(n, i * 5))
+        .tap(() => {
+          awaitedExecutions--;
+          totalExecutions--;
+        })
+        .consume();
+      expect(awaitedMax).toBe(1);
+      expect(parallelMax).toBe(3);
+      expect(totalMax).toBe(4);
     });
   });
 });

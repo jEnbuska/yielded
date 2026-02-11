@@ -47,7 +47,8 @@
     "lint": "eslint --ext .ts --max-warnings 0 ./src",
     "lint:fix": "eslint --fix --ext .ts ./src",
     "prettier": "prettier --check ./src",
-    "prettier:write": "prettier --write ./src"
+    "prettier:write": "prettier --write ./src",
+    "check-all": "npm run prettier && npm run validate && npm run lint && npm run test"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
