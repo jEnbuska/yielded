@@ -1,6 +1,6 @@
 {
   "name": "@jenbuska/yielded",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A TypeScript library for composing and transforming values from synchronous iterables and asynchronous generators through a uniform, lazy-evaluated pipeline API",
   "keywords": [
     "iterator",
