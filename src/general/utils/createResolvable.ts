@@ -13,10 +13,10 @@ export function createResolvable<T = void>(): {
   if (hasNative(Promise, "withResolvers") && !Yielded.__USE_POLYFILL_ONLY__) {
     return Promise.withResolvers<T>();
   }
-  return new PromiseWithResolvers<T>();
+  return new PolyfillPromiseWithResolvers<T>();
 }
 
-export class PromiseWithResolvers<T> {
+export class PolyfillPromiseWithResolvers<T> {
   promise: Promise<T>;
 
   #resolver?: (value: T | PromiseLike<T>) => void;
