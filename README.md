@@ -5,6 +5,7 @@ A TypeScript library for composing and transforming values from synchronous iter
 [![CI](https://img.shields.io/github/actions/workflow/status/jEnbuska/yielded/ci.yml?branch=main&label=CI)](https://github.com/jEnbuska/yielded/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node.js-20.5.0+-green.svg)](https://nodejs.org/)
+[![npm](https://img.shields.io/badge/npm-@jenbuska/yielded-red.svg)](https://www.npmjs.com/package/@jenbuska/yielded)
 
 ## Features
 
