@@ -3,6 +3,8 @@ import type { INextYielded, IYieldedFlow } from "../../src/general/types.ts";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
 import "../utils/initTestPolyfills.ts";
+import { delay } from "../utils/delay.ts";
+
 /* Verify typing after flat is expected */
 function verify<T>() {
   return (_: T) => {};
@@ -307,6 +309,27 @@ describe("flat", () => {
           .flat()
           .toArray() satisfies Array<number | number[]>,
       ).toStrictEqual([1, 2, [3, 4], 5]);
+    });
+  });
+  describe("flat promises", () => {
+    createTestSets<Array<Promise<number> | number>>([
+      [Promise.resolve(1), delay(5, 2)],
+      [delay(2, 5)],
+      [Promise.resolve(1), 1],
+      [delay(2, 1)],
+      [Promise.resolve(23), 1],
+      [delay(15, 2)],
+      [Promise.resolve(42), delay(15, 2)],
+      [delay(15, 2)],
+    ]).allAsyncModes.forEach(({ mode, yielded }) => {
+      test(mode, async () => {
+        const result = (await yielded.flat().toArray()) satisfies number[];
+        await handleExpect(
+          mode,
+          result,
+          [1, 5, 2, 1, 1, 2, 23, 1, 15, 42, 15, 15],
+        );
+      });
     });
   });
 });

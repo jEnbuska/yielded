@@ -97,7 +97,7 @@ export class AsyncYielded<T>
 
   flat<Depth extends number = 1>(
     depth?: Depth,
-  ): AsyncYielded<FlatArray<T[], Depth>> {
+  ): AsyncYielded<Awaited<FlatArray<T[], Depth>>> {
     return this.#next(flatAsync, depth);
   }
 
