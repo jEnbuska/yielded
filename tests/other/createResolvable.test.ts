@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { PromiseWithResolvers } from "../../src/general/utils/createResolvable.ts";
+import { PolyfillPromiseWithResolvers } from "../../src/general/utils/createResolvable.ts";
 import "../utils/initTestPolyfills.ts";
 
 describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("resolve", async () => {
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
       polyfill.resolve(1);
       resolvable.resolve(1);
@@ -16,7 +16,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       polyfill.resolve(1);
       resolvable.resolve(1);
       polyfill.resolve(2);
@@ -28,7 +28,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("resolve and reject", async () => {
     const testError = new Error("Test error");
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
       polyfill.resolve(1);
       polyfill.reject(testError);
@@ -39,7 +39,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       resolvable.resolve(1);
       resolvable.reject(testError);
       polyfill.resolve(1);
@@ -52,7 +52,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("reject and resolve", async () => {
     const testError = new Error("Test error");
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
       polyfill.reject(testError);
       resolvable.reject(testError);
@@ -63,7 +63,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       resolvable.reject(testError);
       polyfill.reject(testError);
       resolvable.resolve(1);
@@ -76,7 +76,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("reject", async () => {
     const testError = new Error("Test error");
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
       polyfill.reject(testError);
       resolvable.reject(testError);
@@ -85,7 +85,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       resolvable.reject(testError);
       polyfill.reject(testError);
       await expect(polyfill.promise).rejects.toThrowError(testError);
@@ -95,7 +95,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
 
   test("resolve timing", async () => {
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
 
       let polyfillResolver: any;
@@ -112,7 +112,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
 
       let resolvableResolved: any;
       void resolvable.promise.then((result) => {
@@ -131,7 +131,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
   test("reject timing", async () => {
     const testError = new Error("Test error");
     {
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
       const resolvable = Promise.withResolvers<number>();
       let polyfillRejected: any;
       void polyfill.promise.catch((e) => {
@@ -147,7 +147,7 @@ describe.skipIf(!("withResolvers" in Promise))("createResolvable", () => {
     }
     {
       const resolvable = Promise.withResolvers<number>();
-      const polyfill = new PromiseWithResolvers<number>();
+      const polyfill = new PolyfillPromiseWithResolvers<number>();
 
       let resolvableRejected: any;
       void resolvable.promise.catch((e) => {

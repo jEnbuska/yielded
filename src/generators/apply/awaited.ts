@@ -50,7 +50,7 @@ export async function* parallelToAwaited<T>(
   let done = false;
   const buffer: T[] = [];
   let consumerResolvable = createResolvable<void>();
-  let producerResolvable = createResolvable<void>();
+  const producerResolves: Array<() => void> = [];
   void ParallelGeneratorResolver.run<T, void>({
     name: "consume",
     generator,
@@ -59,10 +59,9 @@ export async function* parallelToAwaited<T>(
     async onNext(value) {
       buffer.push(value);
       consumerResolvable.resolve();
-      if (parallel <= buffer.length) {
-        await producerResolvable.promise;
-        producerResolvable = createResolvable();
-      }
+      const { resolve, promise } = createResolvable<void>();
+      producerResolves.push(resolve);
+      await promise;
     },
     onDone(resolve) {
       consumerResolvable.resolve();
@@ -74,7 +73,7 @@ export async function* parallelToAwaited<T>(
   while (true) {
     while (buffer.length) {
       yield buffer.shift()!;
-      producerResolvable.resolve();
+      producerResolves.shift()?.();
     }
     if (done) return;
     await consumerResolvable.promise;
