@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved handling of promise values in flat operations
 - Refactored ParallelGenerator to remove overlapping code and improve reliability
 
-## [1.0.0] - TBD
+## [1.0.0] - 2026-02-10
 
 ### Added
 - Initial release of Yielded
