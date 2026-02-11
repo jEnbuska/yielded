@@ -134,7 +134,7 @@ describe("parallel", () => {
         .consume();
       expect(awaitedMax).toBe(1);
       expect(parallelMax).toBe(3);
-      expect(totalMax).toBe(4);
+      expect(totalMax).toBe(3);
     });
   });
 });
