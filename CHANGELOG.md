@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - npm package badge to README for easier package discovery and installation
+- Fixed inconsistencies when tranforming paralle stream to awaited stream
 
 ## [1.1.0] - 2026-02-11
 
