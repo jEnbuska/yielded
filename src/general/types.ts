@@ -10,6 +10,10 @@ export type INextYielded<T, TFlow extends IYieldedFlow> = TFlow extends "async"
 
 export type IMaybeAsync<T> = Promise<T> | T;
 
+export type IMaybeAwaited<T, Flow extends IYieldedFlow> = Flow extends "sync"
+  ? T
+  : Awaited<T>;
+
 export type IYieldedFlow = "sync" | "async" | "parallel";
 
 export type IYieldedIterableSource<
