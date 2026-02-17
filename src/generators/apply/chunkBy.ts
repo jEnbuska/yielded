@@ -89,11 +89,11 @@ export function chunkByParallel<T, TIdentifier = any>(
   }
   return {
     name: "chunkBy",
-    async onNext(next) {
+    async *onNext(next) {
       await stash(next);
     },
-    onDone() {
-      if (acc.length) return acc;
+    async *onDone() {
+      if (acc.length) return yield* acc;
     },
   };
 }

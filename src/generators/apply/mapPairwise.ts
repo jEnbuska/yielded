@@ -63,15 +63,14 @@ export function mapPairwiseParallel<T, TOut>(
   let previous: { value: T } | undefined = undefined;
   return {
     name: "mapPairwise",
-    async onNext(next) {
+    async *onNext(next) {
       if (!previous) {
         previous = { value: next };
       } else {
         const currentPrevious = previous.value;
         previous = { value: next };
-        return [await mapper(currentPrevious, next)];
+        return yield mapper(currentPrevious, next);
       }
-      previous = { value: next };
     },
   };
 }

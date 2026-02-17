@@ -74,13 +74,13 @@ export function dropLastParallel<T>(
   let skipped = 0;
   return {
     name: "dropLast",
-    onNext(next) {
+    async *onNext(next) {
       buffer.push(next);
       if (skipped < count) {
         skipped++;
         return;
       }
-      return [buffer.shift()!];
+      return yield buffer.shift()!;
     },
   };
 }

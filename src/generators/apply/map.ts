@@ -55,8 +55,8 @@ export function mapParallel<T, TOut>(
   let index = 0;
   return {
     name: "map",
-    async onNext(next) {
-      return [await mapper(next, index++)];
+    async *onNext(next) {
+      return yield mapper(next, index++);
     },
   };
 }

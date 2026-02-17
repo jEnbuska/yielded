@@ -4,6 +4,7 @@ import { ParallelYielded } from "../../src/parallel/ParallelYielded.ts";
 import { delay } from "../utils/delay.ts";
 import { MockIYieldedParallelGenerator } from "../utils/MockGenerators.ts";
 import "../utils/initTestPolyfills.ts";
+
 describe("ParallelGenerator", () => {
   describe("handleNext", () => {
     test("empty generator, parallel 1", async () => {
@@ -11,7 +12,7 @@ describe("ParallelGenerator", () => {
         name: "_test",
         generator: MockIYieldedParallelGenerator([]),
         parallel: 1,
-        onNext() {
+        async *onNext() {
           throw new Error("Should not be called");
         },
       });
@@ -23,7 +24,7 @@ describe("ParallelGenerator", () => {
         name: "_test",
         generator: MockIYieldedParallelGenerator([]),
         parallel: 1,
-        onNext() {
+        async *onNext() {
           throw new Error("Should not be called");
         },
       });
@@ -36,8 +37,8 @@ describe("ParallelGenerator", () => {
         name: "_test",
         generator: MockIYieldedParallelGenerator([1]),
         parallel: 1,
-        onNext(next) {
-          return [next];
+        async *onNext(next) {
+          yield next;
         },
       });
       const result1 = await generator.next();
@@ -53,8 +54,8 @@ describe("ParallelGenerator", () => {
         name: "_test",
         generator: MockIYieldedParallelGenerator(values),
         parallel: 1,
-        onNext(next) {
-          return [next];
+        async *onNext(next) {
+          return yield next;
         },
       });
       for (const value of values) {
@@ -72,8 +73,8 @@ describe("ParallelGenerator", () => {
         name: "_test",
         generator: MockIYieldedParallelGenerator(values),
         parallel: 5,
-        onNext(next) {
-          return [next];
+        async *onNext(next) {
+          return yield next;
         },
       });
       for (const value of values) {
@@ -102,8 +103,8 @@ describe("ParallelGenerator", () => {
           generator: mock,
           parallel: 5,
           name: "_test",
-          onNext(next) {
-            return [next];
+          async *onNext(next) {
+            return yield next;
           },
         }),
         5,
@@ -131,8 +132,8 @@ describe("ParallelGenerator", () => {
           generator: mock,
           parallel: 3,
           name: "_test",
-          onNext(next) {
-            return [next];
+          async *onNext(next) {
+            return yield next;
           },
         }),
         3,
@@ -155,8 +156,8 @@ describe("ParallelGenerator", () => {
           generator: mock,
           parallel: 2,
           name: "_test",
-          onNext(next) {
-            return [next];
+          async *onNext(next) {
+            return yield next;
           },
         }),
         2,

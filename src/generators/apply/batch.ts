@@ -75,18 +75,22 @@ export function batchParallel<T>(
 ): IParallelGeneratorSubConfig<T, T[]> {
   let index = 0;
   let acc: T[] = [];
+  const handleNext = throttle(1, async function onNext(next) {
+    acc.push(next);
+    const match = await predicate(acc, index++);
+    if (match) return [];
+    const result = acc;
+    acc = [];
+    return [result];
+  });
+
   return {
     name: "batch",
-    onNext: throttle(1, async function onNext(next) {
-      acc.push(next);
-      const match = await predicate(acc, index++);
-      if (match) return;
-      const payload = acc;
-      acc = [];
-      return [payload];
-    }),
-    onDone() {
-      if (acc.length) return [acc];
+    async *onNext(next) {
+      yield* await handleNext(next);
+    },
+    async *onDone() {
+      if (acc.length) yield acc;
     },
   };
 }

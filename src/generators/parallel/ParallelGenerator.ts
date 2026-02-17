@@ -4,7 +4,6 @@ import {
   assertIsValidParallel,
   throttle,
 } from "../../general/utils/parallel.ts";
-import { ParallelBufferGenerator } from "../../resolvers/parallel/ParallelBufferGenerator.ts";
 import type { IYieldedGenerator } from "../types.ts";
 import { ParallelAbortError } from "./ParallelAbortError.ts";
 import type {
@@ -13,6 +12,8 @@ import type {
   IParallelGeneratorOnNext,
   IParallelGeneratorState,
   IYieldedParallelGenerator,
+  OnNextGenerator,
+  OnNextIterable,
 } from "./types.ts";
 
 const returnResult: IteratorReturnResult<void | undefined> = {
@@ -36,20 +37,18 @@ export class ParallelGenerator<
 
   #queue: Array<PromiseWithResolvers<IteratorResult<TOut, void>>> = [];
 
-  #pendingWork = new Set<any>();
+  #pendingWork: Promise<any>[] = [];
+
+  #pendingDraining: Promise<any>[] = [];
 
   #doneResolvable: PromiseWithResolvers<void> & { resolved?: boolean } =
     createResolvable();
 
   readonly #parallel: number;
 
-  readonly #buffer: Array<IYieldedGenerator<TOut, "async">> = [];
+  readonly #buffer: Array<OnNextGenerator<TOut>> = [];
 
   readonly #generator: IYieldedParallelGenerator<T>;
-
-  #drainers = 0;
-
-  #drainResolvable = createResolvable<void>();
 
   static create<T, TOut = T>(options: {
     name: IParallelGeneratorName;
@@ -61,7 +60,7 @@ export class ParallelGenerator<
     const {
       generator,
       parallel,
-      onNext = ParallelGenerator.#defaultOnNext,
+      onNext = ParallelGenerator.#defaultOnNext<TOut>,
       onDone,
       name,
     } = options as any;
@@ -74,8 +73,8 @@ export class ParallelGenerator<
     );
   }
 
-  static #defaultOnNext(value: Promise<unknown>) {
-    return [value];
+  static async *#defaultOnNext<T>(next: Promise<T> | T): OnNextIterable<T> {
+    yield next;
   }
 
   private constructor(
@@ -148,13 +147,11 @@ export class ParallelGenerator<
 
   async next(): Promise<IteratorResult<TOut, void>> {
     if (this.#error) throw this.#error;
-
     if (this.#state === "aborted") return returnResult;
-
     const resolvable = createResolvable<IteratorResult<TOut, void>>();
     this.#queue.push(resolvable);
     if (this.#state === "done") {
-      void this.#drainLastFromBuffered()
+      void this.#drainBuffered()
         .then(this.#onHandleNextResolved)
         .catch(this.#handleError);
     } else {
@@ -184,87 +181,125 @@ export class ParallelGenerator<
   };
 
   async #handleNext(): Promise<IteratorResult<TOut, void>> {
-    while (true) {
-      const buffered = await this.#registerWork(this.#getNextFromBuffer());
-      if (buffered) return buffered;
-
-      if (this.#getState() !== "running") return this.#handleDone();
-
-      const next = await this.#registerWork(this.#generator.next());
-      if (next.done) return this.#handleDone();
-
-      const result = await this.#registerWork(this.#onNext?.(next.value));
-      if (!result) continue;
-      if (result === "STOP") {
-        void this.#generator.return?.();
-        return this.#handleDone();
-      }
-      const iterable = new ParallelBufferGenerator(result);
-      const first = await this.#registerWork(iterable.next());
-      if (first.done) continue;
-      this.#buffer.push(iterable);
-      return first;
-    }
-  }
-
-  async #registerWork<T>(work: Promise<T> | T): Promise<T> {
-    const promise = Promise.race([work]);
-
-    this.#pendingWork.add(promise);
+    const resolve = this.#registerHandleNext();
     try {
-      const result = await promise;
-      if (this.#getState() !== "aborted") return result;
-      throw new ParallelAbortError("Aborted");
+      while (true) {
+        const buffered = await this.#getNextFromBuffer();
+        if (!buffered?.done) return buffered;
+        if (this.#getState() !== "running") return this.#handleDone(resolve);
+        const next = await this.#generator.next();
+
+        if (next.done) return this.#handleDone(resolve);
+        if (this.#getState() === "aborted") return returnResult;
+        const generator = this.#onNext(next.value);
+        const nextProvided = await generator.next();
+        if (this.#getState() === "aborted") return returnResult;
+        if (!nextProvided.done) {
+          this.#buffer.push(generator);
+          return nextProvided;
+        }
+        if (nextProvided.value === "STOP") {
+          void this.#generator.return?.();
+          return this.#handleDone(resolve);
+        }
+        if (this.#getState() === "done") {
+          return this.#handleDone(resolve);
+        }
+      }
     } finally {
-      this.#pendingWork.delete(promise);
+      resolve();
     }
   }
 
-  async #handleDone() {
+  #registerHandleNext() {
+    const { resolve, promise } = createResolvable();
+    const pendingWork = this.#pendingWork;
+    pendingWork.push(promise);
+    return function () {
+      const index = pendingWork.indexOf(promise);
+      void pendingWork.splice(index, 1);
+      resolve();
+    };
+  }
+
+  async #handleDone(resolve: () => void) {
+    if (this.#getState() === "aborted") return returnResult;
+    resolve();
     if (this.#getState() === "running") {
       this.#setState("done");
-      while (this.#pendingWork.size) await Promise.all(this.#pendingWork);
-      const result = await this.#onDone?.();
-      if (result) this.#buffer.push(new ParallelBufferGenerator(result));
+      while (this.#pendingWork.length) await Promise.all(this.#pendingWork);
+      if (this.#onDone) {
+        const iterable = this.#onDone();
+        this.#buffer.push(iterable);
+      }
       this.#doneResolvable.resolve();
       this.#doneResolvable.resolved = true;
     }
-    return this.#drainLastFromBuffered();
+    return this.#drainBuffered();
   }
 
   async #getNextFromBuffer() {
     while (this.#buffer.length && this.#state !== "aborted") {
       const iterable = this.#buffer.shift()!;
       const next = await iterable.next();
+      if (this.#getState() === "aborted") break;
       if (next.done) continue;
       this.#buffer.push(iterable);
       return next;
     }
+    return returnResult;
   }
 
-  async #drainLastFromBuffered(): Promise<IteratorResult<TOut, void>> {
-    const wasResolved = this.#doneResolvable.resolved;
-    while (
-      this.#drainers &&
-      !this.#buffer.length &&
-      this.#state !== "aborted"
-    ) {
-      await this.#drainResolvable.promise;
+  static #asNotStopIteratorReturnResult<T>(
+    result: IteratorResult<T, void | "STOP">,
+  ): IteratorResult<T, void> {
+    if (result.done) {
+      if (result.value === undefined) return result as IteratorResult<T, void>;
+      throw new Error(
+        "Value can only be returned from generator's when nothing is yielded",
+      );
     }
-    let next: IteratorResult<TOut, void> = returnResult;
-    while (this.#buffer.length && this.#state !== "aborted") {
-      const iterable = this.#buffer.shift()!;
-      this.#drainers++;
-      next = await iterable.next();
-      this.#drainers--;
-      if (next.done) continue;
-      this.#buffer.push(iterable);
-      break;
+    return result;
+  }
+
+  async #drainBuffered(): Promise<IteratorResult<TOut, void>> {
+    while (true) {
+      if (this.#getState() === "aborted") return returnResult;
+      if (!this.#buffer.length) {
+        const promisesToRace: Array<Promise<any>> = [];
+        if (!this.#doneResolvable.resolved) {
+          promisesToRace.push(this.#doneResolvable.promise);
+        }
+        promisesToRace.push(...this.#pendingWork);
+        promisesToRace.push(...this.#pendingDraining);
+        if (!promisesToRace.length) return returnResult;
+        await Promise.race(promisesToRace);
+      } else {
+        const resolve = this.#registerDrainBuffer();
+        let next: IteratorResult<TOut, void> = returnResult;
+        while (this.#buffer.length && this.#getState() !== "aborted") {
+          const iterable = this.#buffer.shift()!;
+          next = ParallelGenerator.#asNotStopIteratorReturnResult(
+            await iterable.next(),
+          );
+          if (next.done) continue;
+          this.#buffer.unshift(iterable);
+          break;
+        }
+        resolve();
+        if (!next.done) return next;
+      }
     }
-    this.#drainResolvable.resolve();
-    this.#drainResolvable = createResolvable<void>();
-    if (!next.done || wasResolved) return next;
-    await this.#doneResolvable.promise;
-    return this.#drainLastFromBuffered();
+  }
+
+  #registerDrainBuffer() {
+    const { resolve, promise } = createResolvable();
+    const pendingDraining = this.#pendingDraining;
+    pendingDraining.push(promise);
+    return function () {
+      const index = pendingDraining.indexOf(promise);
+      void pendingDraining.splice(index, 1);
+      resolve();
+    };
   }
 }

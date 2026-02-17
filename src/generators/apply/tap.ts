@@ -56,9 +56,9 @@ export function tapParallel<T>(
   let index = 0;
   return {
     name: "tap",
-    async onNext(value) {
+    async *onNext(value) {
       await consumer(value, index++);
-      return [value];
+      yield value;
     },
   };
 }

@@ -108,10 +108,13 @@ export function flatMapParallel<T, TOut>(
   let index = 0;
   return {
     name: "flatMap",
-    async onNext(next) {
-      const res = await callback(next, index++);
-      if (isAsyncIterableProvider<TOut>(res)) return res;
-      return [res];
+    async *onNext(next) {
+      const value = await callback(next, index++);
+      if (!isAsyncIterableProvider<TOut>(value)) return yield value;
+      const iterable = asyncIterableProviderToAsyncIterable<TOut>(value);
+      for await (const item of iterable) {
+        yield item;
+      }
     },
   };
 }
