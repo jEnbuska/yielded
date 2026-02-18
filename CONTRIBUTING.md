@@ -362,7 +362,7 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
    git checkout main
    git pull origin main
    git tag vX.Y.Z
-   git push origin vX.Y.Z
+   git push origin refs/tags/vX.Y.Z
    
    # Publish to npm as a public scoped package
    npm publish --access public
