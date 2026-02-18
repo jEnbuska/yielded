@@ -10,6 +10,8 @@ export type IYieldedParallel<T> = {
    * Enables parallel processing for the **next asynchronous operation**.
    * NOTE. Parallelization adds some overhead and only truly benefits operations that involve independent asynchronous work,
    *
+   * The execution and the order of the items are not guaranteed to be the same as the original input order. Instead, items are yielded in the order they complete.
+   *
    * By default, items are processed sequentially (one at a time).
    * Calling `parallel(count)` configures the pipeline so that the
    * **following async-producing operation** may run with up to

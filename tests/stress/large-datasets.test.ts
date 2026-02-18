@@ -357,7 +357,7 @@ describe("Stress Tests - Large Datasets", () => {
     });
   });
 
-  describe.only("random data flatMap", () => {
+  describe("random data flatMap", () => {
     const size = 1000;
     asyncModeCreations.forEach(({ mode, create }) => {
       test(
