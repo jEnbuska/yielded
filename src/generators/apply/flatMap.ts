@@ -1,5 +1,6 @@
 import type {
   IMaybeAsync,
+  IMaybeAwaited,
   INextYielded,
   IYieldedFlow,
   IYieldedIterableSource,
@@ -53,7 +54,7 @@ export interface IYieldedFlatMap<T, TFlow extends IYieldedFlow> {
       readonly TOut[] | IYieldedIterableSource<TOut, TFlow> | TOut,
       TFlow
     >,
-  ): INextYielded<TOut, TFlow>;
+  ): INextYielded<IMaybeAwaited<TOut, TFlow>, TFlow>;
 }
 
 export function* flatMapSync<T, TOut>(
