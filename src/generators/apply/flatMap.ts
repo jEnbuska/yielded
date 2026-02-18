@@ -105,7 +105,7 @@ export function flatMapParallel<T, TOut>(
   ) => IMaybeAsync<
     readonly TOut[] | IYieldedIterableSource<TOut, "parallel"> | TOut
   >,
-): IParallelGeneratorSubConfig<T, TOut> {
+): IParallelGeneratorSubConfig<T, Awaited<TOut>> {
   let index = 0;
   return {
     name: "flatMap",
