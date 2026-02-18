@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-02-18
+
+### Added
+- 💣 - The parallel operation execution order might be different from on previous release. Added documentation change for parallel highlighting the fact that any order of the execution should not be assumed / expected.
+- Significantly improve how the parallel generators are resolved, while adding the confidence of potentially edge cases previously not being not that well covered. 
+- Fixed the typing of awaited and parallel flatMap output that in some cases was assuming the output will include un awaited values even though async and parallel flatMap resolve those promises before chained to next.
+- Added extensive test coverage for `flatMap` functionality
 
 ## [1.1.1] - 2026-02-11
 
