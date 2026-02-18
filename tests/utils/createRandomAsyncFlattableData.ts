@@ -5,7 +5,7 @@ export function createRandomSyncFlattableData(size: number) {
   const acc: Array<number | Array<number> | Generator<number>> = [];
   let i = -1;
 
-  while (i <= size) {
+  while (i < size) {
     const n = Math.floor(Math.random() * 14);
     if (n === 0) {
       acc.push(++i);
@@ -129,7 +129,7 @@ export function createRandomAsyncFlattableData(size: number) {
   > = [];
   let i = -1;
 
-  while (i <= size) {
+  while (i < size) {
     const n = Math.floor(Math.random() * 50);
     if (n === 0) {
       acc.push(++i);
