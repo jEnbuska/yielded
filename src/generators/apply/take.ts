@@ -69,9 +69,9 @@ export function takeParallel<T>(count: number): IParallelGeneratorSubConfig<T> {
   assertIsNotZero(count);
   return {
     name: "take",
-    onNext(next) {
+    async *onNext(next) {
       if (count-- <= 0) return "STOP";
-      return [next];
+      yield next;
     },
   };
 }

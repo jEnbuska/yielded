@@ -88,10 +88,10 @@ export function filterParallel(
   let index = 0;
   return {
     name: "filter",
-    async onNext(next) {
+    async *onNext(next) {
       const match = await predicate(next, index++);
       if (!match) return;
-      return [next];
+      return yield next;
     },
   };
 }

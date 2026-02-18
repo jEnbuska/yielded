@@ -29,12 +29,10 @@ export function asyncIterableProviderToAsyncIterable<T>(
   if (isIterable<T>(value)) {
     return value;
   }
-  const disposed = false;
   return {
     [Symbol.asyncIterator](): AsyncIterator<T> {
       return {
         async next(): Promise<IteratorResult<T>> {
-          if (disposed) return { done: true, value: undefined };
           return (value as any).next();
         },
       };

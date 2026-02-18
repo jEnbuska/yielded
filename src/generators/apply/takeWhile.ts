@@ -59,8 +59,8 @@ export function takeWhileParallel<T>(
 ): IParallelGeneratorSubConfig<T> {
   return {
     name: "takeWhile",
-    async onNext(next) {
-      if (await predicate(next)) return [next];
+    async *onNext(next) {
+      if (await predicate(next)) return yield next;
       return "STOP";
     },
   };

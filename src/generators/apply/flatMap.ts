@@ -1,5 +1,6 @@
 import type {
   IMaybeAsync,
+  IMaybeAwaited,
   INextYielded,
   IYieldedFlow,
   IYieldedIterableSource,
@@ -53,7 +54,7 @@ export interface IYieldedFlatMap<T, TFlow extends IYieldedFlow> {
       readonly TOut[] | IYieldedIterableSource<TOut, TFlow> | TOut,
       TFlow
     >,
-  ): INextYielded<TOut, TFlow>;
+  ): INextYielded<IMaybeAwaited<TOut, TFlow>, TFlow>;
 }
 
 export function* flatMapSync<T, TOut>(
@@ -104,14 +105,17 @@ export function flatMapParallel<T, TOut>(
   ) => IMaybeAsync<
     readonly TOut[] | IYieldedIterableSource<TOut, "parallel"> | TOut
   >,
-): IParallelGeneratorSubConfig<T, TOut> {
+): IParallelGeneratorSubConfig<T, Awaited<TOut>> {
   let index = 0;
   return {
     name: "flatMap",
-    async onNext(next) {
-      const res = await callback(next, index++);
-      if (isAsyncIterableProvider<TOut>(res)) return res;
-      return [res];
+    async *onNext(next) {
+      const value = await callback(next, index++);
+      if (!isAsyncIterableProvider<TOut>(value)) return yield value;
+      const iterable = asyncIterableProviderToAsyncIterable<TOut>(value);
+      for await (const item of iterable) {
+        yield item;
+      }
     },
   };
 }

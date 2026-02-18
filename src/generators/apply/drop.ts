@@ -67,12 +67,12 @@ export function dropParallel<T>(
 ): IParallelGeneratorSubConfig<T, T> {
   return {
     name: "drop",
-    onNext(next) {
+    async *onNext(next) {
       if (count > 0) {
         count--;
         return;
       }
-      return [next];
+      yield next;
     },
   };
 }

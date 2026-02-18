@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
 import "../utils/initTestPolyfills.ts";
+
 describe("takeLast", () => {
   describe("take last when empty", () => {
     createTestSets([]).modes.forEach(({ mode, yielded }) => {
@@ -36,7 +37,8 @@ describe("takeLast", () => {
   describe("take last when count less than array length ", () => {
     createTestSets([1, 2, 3]).modes.forEach(({ mode, yielded }) => {
       test(mode, async () => {
-        expect(await yielded.takeLast(2).toArray()).toStrictEqual([2, 3]);
+        const result = await yielded.takeLast(2).toArray();
+        expect(await result).toStrictEqual([2, 3]);
       });
     });
   });

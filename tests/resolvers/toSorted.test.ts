@@ -3,6 +3,7 @@ import { Yielded } from "../../src/index.ts";
 import { createTestSets } from "../utils/createTestSets.ts";
 import { sleep } from "../utils/sleep.ts";
 import "../utils/initTestPolyfills.ts";
+
 describe("toSorted", () => {
   describe("toSorted numbers", () => {
     createTestSets([3, 1, 2]).modes.forEach(({ yielded, mode }) => {

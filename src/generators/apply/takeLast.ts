@@ -59,12 +59,12 @@ export function takeLastParallel<T>(
   const acc: Array<T> = [];
   return {
     name: "takeLast",
-    onNext(next) {
+    async *onNext(next) {
       acc.push(next);
-      if (acc.length > count) [acc.shift()!];
+      if (acc.length > count) acc.shift();
     },
-    onDone() {
-      return acc;
+    async *onDone() {
+      yield* acc;
     },
   };
 }
