@@ -14,6 +14,7 @@ Thank you for your interest in contributing to Yielded! This document provides g
 - [Project Structure](#project-structure)
 - [Local Testing with npm link](#local-testing-with-npm-link)
 - [Example Projects](#example-projects)
+- [Beta / Pre-release Process](#beta--pre-release-process)
 - [Release Process](#release-process)
 
 ## Code of Conduct
@@ -397,6 +398,84 @@ To run the example tests from the repository root (browsers are installed automa
 ```bash
 npm run test:examples
 ```
+
+## Beta / Pre-release Process
+
+Beta releases allow users to test upcoming features before a final release. They are published to npm under the `beta` dist-tag so that a plain `npm install @jenbuska/yielded` **never** installs a beta version.
+
+### Publishing a Beta
+
+1. **Set the pre-release version** in `package.json`:
+   ```bash
+   # First beta for an upcoming minor release
+   npm version 2.1.0-beta.0 --no-git-tag-version
+
+   # Increment beta counter for subsequent fixes
+   npm version 2.1.0-beta.1 --no-git-tag-version
+   ```
+
+2. **Run all checks**:
+   ```bash
+   npm run check-all
+   ```
+
+3. **Publish with the `beta` tag**:
+   ```bash
+   npm run publish:beta
+   ```
+   This runs `npm publish --tag beta --access public`. The `prepublishOnly` hook builds the package automatically before publishing.
+
+4. **Verify the tag on npm**:
+   ```bash
+   npm dist-tag ls @jenbuska/yielded
+   # Expected output:
+   #   beta: 2.1.0-beta.0
+   #   latest: 2.0.0
+   ```
+   The `latest` tag must still point to the last stable release — do **not** pass `--tag latest` during a beta publish.
+
+5. **Commit and push** the version bump:
+   ```bash
+   git add package.json package-lock.json CHANGELOG.md
+   git commit -m "chore: 2.1.0-beta.0"
+   git push
+   ```
+
+### Installing a Beta
+
+Users can opt in to a beta version explicitly. A plain install will never pick up a beta release.
+
+```bash
+# Install the latest beta
+npm install @jenbuska/yielded@beta
+
+# Install a specific beta version
+npm install @jenbuska/yielded@2.1.0-beta.0
+
+# Check which version you have installed
+npm ls @jenbuska/yielded
+```
+
+To go back to the latest stable release:
+```bash
+npm install @jenbuska/yielded@latest
+```
+
+### Promoting a Beta to Stable
+
+Once the beta has been validated, promote it to stable by:
+
+1. Remove the pre-release suffix from the version (`2.1.0-beta.0` → `2.1.0`):
+   ```bash
+   npm version 2.1.0 --no-git-tag-version
+   ```
+2. Follow the standard [Release Process](#release-process) steps.
+3. After publishing stable, move the `beta` dist-tag forward (optional):
+   ```bash
+   npm dist-tag add @jenbuska/yielded@2.1.0 beta
+   ```
+
+---
 
 ## Release Process
 

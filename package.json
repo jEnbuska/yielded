@@ -1,6 +1,6 @@
 {
   "name": "@jenbuska/yielded",
-  "version": "2.1.0",
+  "version": "2.1.0-beta.0",
   "description": "A TypeScript library for composing and transforming values from synchronous iterables and asynchronous generators through a uniform, lazy-evaluated pipeline API",
   "keywords": [
     "iterator",
@@ -46,6 +46,7 @@
     "build": "rm -rf dist && tsup",
     "link": "npm run build && npm link",
     "prepublishOnly": "npm run build",
+    "publish:beta": "npm publish --tag beta --access public",
     "test": "USE_POLYFILLS=true vitest run --coverage && vitest run --coverage",
     "test:watch": "vitest --watch",
     "test:examples": "npm run test:example:node && npm run test:example:react",
