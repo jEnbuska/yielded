@@ -25,5 +25,8 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  // Exclude example projects — they have their own tsconfig and package.json
+  // with dependencies that are not installed at the repository root.
+  "exclude": ["node_modules", "dist", "examples"]
 }
