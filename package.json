@@ -26,6 +26,9 @@
   "homepage": "https://github.com/jEnbuska/yielded#readme",
   "module": "./src/index.ts",
   "type": "module",
+  "engines": {
+    "node": ">=20.4.0"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

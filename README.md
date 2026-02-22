@@ -4,7 +4,7 @@ A TypeScript library for composing and transforming values from synchronous iter
 
 [![CI](https://img.shields.io/github/actions/workflow/status/jEnbuska/yielded/ci.yml?branch=main&label=CI)](https://github.com/jEnbuska/yielded/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node.js-20.5.0+-green.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node.js-20.4.0+-green.svg)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-@jenbuska/yielded-red.svg)](https://www.npmjs.com/package/@jenbuska/yielded)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://www.npmjs.com/package/@jenbuska/yielded?activeTab=dependencies)
 
@@ -23,7 +23,9 @@ A TypeScript library for composing and transforming values from synchronous iter
 
 **Node.js Requirements**
 
-This library requires **Node.js 20.5.0 or newer**.
+This library requires **Node.js 20.4.0 or newer** (Node 20, 22, 24 LTS releases are all supported and tested in CI).
+
+> **Why 20.4.0?** The runtime cleanup mechanism relies on `Symbol.dispose` and `Symbol.asyncDispose`, which were introduced in Node.js 20.4.0. The published bundle no longer uses the `using` keyword (it was replaced with `try/finally`), so older versions of Node that didn't support `using` now work fine.
 
 **Browser Support:**
 - ✅ **Chrome** 90+ (full ES2022+ support)
@@ -644,16 +646,16 @@ const asyncNumbers: IAsyncYielded<number> = Yielded.from(asyncGenerator());
 
 ## Browser and Node.js Support
 
-**Node.js:**
-- **Minimum version: 20.5.0+**
+**Node.js** (CI-tested on all active LTS releases):
+- ✅ Node.js 20 (maintenance LTS, 20.4.0+ required for `Symbol.dispose`)
+- ✅ Node.js 22 (active LTS)
+- ✅ Node.js 24 (current)
 
 **Browsers** (all tested with Playwright in CI):
 - ✅ Chrome 90+
 - ✅ Firefox 88+
 - ✅ Edge 90+
 - ✅ Safari — works out of the box (WebKit, no polyfills needed)
-
-The published bundle targets ES2022 and contains no runtime dependencies.
 
 ## Contributing
 

@@ -22,8 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TypeScript declarations fixed**: switched from `tsc --emitDeclarationOnly` to tsup's `dts: true` option — all types are now bundled into a single `dist/index.d.ts` with no cross-file `.ts` extension references, so consumer projects resolve types correctly without any extra tsconfig flags
 - Build script now cleans `dist/` before building (`rm -rf dist && tsup`)
 - `prettier` and `prettier:write` scripts now also cover `./examples`
-- Updated README: removed outdated Safari compatibility warning; Safari is now ✅ fully supported (verified via Playwright WebKit tests in CI)
-- Updated `Browser and Node.js Support` sections throughout README to reflect confirmed cross-browser support
+- **Minimum Node.js version lowered to 20.4.0** (from 20.5.0): removing the `using` keyword (replaced with `try/finally`) eliminated the dependency on the flag-gated `using` syntax; `Symbol.dispose` and `Symbol.asyncDispose`, which are the only remaining runtime requirements, have been available since Node 20.4.0
+- **Node.js CI matrix**: `test-example-node` CI job now runs on Node 20, 22, and 24 to verify compatibility across all current LTS releases
+- Added `"engines": { "node": ">=20.4.0" }` to `package.json`
 
 ### Fixed
 - Declaration files previously contained `.ts` extensions in import paths (e.g. `from "./sync/types.ts"`), which caused TypeScript errors in consumer projects that lacked `allowImportingTsExtensions`. Now fixed by bundling all types into one file.
