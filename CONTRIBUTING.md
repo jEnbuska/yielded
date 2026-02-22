@@ -12,6 +12,9 @@ Thank you for your interest in contributing to Yielded! This document provides g
 - [Code Style](#code-style)
 - [Submitting Changes](#submitting-changes)
 - [Project Structure](#project-structure)
+- [Local Testing with npm link](#local-testing-with-npm-link)
+- [Example Projects](#example-projects)
+- [Beta / Pre-release Process](#beta--pre-release-process)
 - [Release Process](#release-process)
 
 ## Code of Conduct
@@ -55,7 +58,8 @@ npm ci
 
 - `npm run validate` - Run TypeScript type checking
 - `npm run validate:watch` - Run TypeScript type checking in watch mode
-- `npm run build` - Build the project (compiles TypeScript)
+- `npm run build` - Remove `dist`, then build the project (compiles TypeScript)
+- `npm run link` - Build the project and register it globally via `npm link` for local testing
 - `npm test` - Run all tests with coverage
 - `npm run test:watch` - Run tests in watch mode with UI
 - `npm run lint` - Check code for linting errors
@@ -297,6 +301,181 @@ yielded/
 ├── README.md           # Project documentation
 └── CONTRIBUTING.md     # This file
 ```
+
+## Local Testing with npm link
+
+Before publishing a new version, you can verify the package works correctly in a real consumer project using `npm link`. This creates a symlink from the global `node_modules` to your local build, letting you test the built output as if it were installed from the registry.
+
+### Step 1 — Build and link the package
+
+In the `yielded` repository directory, run:
+
+```bash
+npm run link
+```
+
+This runs `npm run build` (which removes the existing `dist`, recompiles JavaScript with `tsup`, and emits TypeScript declarations with `tsc`) and then registers the package globally via `npm link`.
+
+### Step 2 — Link into a consumer project
+
+In the directory of the project you want to test with, run:
+
+```bash
+npm link @jenbuska/yielded
+```
+
+This replaces the installed copy with a symlink to your local build. You can now import from `@jenbuska/yielded` and see your local changes immediately after each `npm run build`.
+
+### Step 3 — Verify the integration
+
+Write or run whatever tests exist in the consumer project. Typical things to check:
+
+- TypeScript types resolve correctly (run `tsc --noEmit` in the consumer)
+- Runtime behavior matches expectations
+- Tree-shaking / bundling works as expected with your build toolchain
+
+### Step 4 — Clean up
+
+Once you are done, remove the link from the consumer project and restore the published version:
+
+```bash
+# In the consumer project
+npm unlink @jenbuska/yielded
+npm install
+
+# In the yielded repo (remove the global link)
+npm unlink
+```
+
+## Example Projects
+
+Two self-contained example projects live in `examples/`. Both reference the local package via `"@jenbuska/yielded": "file:../../"` so they work with or without `npm link`.
+
+### `examples/node-ts` — Barebones Node TypeScript
+
+Verifies that the package works in a plain Node.js environment. Runs sync and async pipelines and prints the results.
+
+```bash
+cd examples/node-ts
+npm install
+npm run build   # tsc compile
+npm start       # node dist/index.js
+```
+
+### `examples/react-vite` — Vite + React + TypeScript
+
+A minimal React app with a counter button. Each click uses Yielded internally to derive the new state. Includes a **Playwright browser test suite** that tests against Chromium, Firefox, WebKit (Safari), and Edge.
+
+```bash
+cd examples/react-vite
+npm install
+npm run build   # type-check + vite build
+npm test        # build + install Playwright browsers + run tests (Chromium, Firefox, WebKit, Edge)
+npm run dev     # start dev server
+```
+
+> **Note:** `npm test` automatically downloads the required Playwright-managed browsers the first time it runs via `npm run install:browsers`. On subsequent runs, Playwright skips the download if the browsers are already cached — so there is no overhead after the first install. **Edge** is not downloaded by this script; its tests run only when Microsoft Edge is installed on the system, and are skipped otherwise.
+
+#### Playwright tests
+
+The tests live in `examples/react-vite/tests/app.spec.ts`. Playwright's `webServer` option starts `vite preview` automatically before the tests and shuts it down afterwards — no manual server management needed. For each browser the tests check:
+
+- The app loads and shows an initial count of `0`
+- Clicking the **Increment** button updates the count to `1`
+- Three clicks update the count to `3` and the items list shows the correct doubled values `[2, 4, 6]`
+
+Browsers tested:
+
+| Project | Engine | Equivalent to |
+|---------|--------|---------------|
+| Chromium | Blink | Chrome |
+| Firefox | Gecko | Firefox |
+| WebKit (Safari) | WebKit | Safari |
+| Edge | Blink | Microsoft Edge (system-installed; tests run only if Edge is present) |
+
+To run the example tests from the repository root (browsers are installed automatically):
+
+```bash
+npm run test:examples
+```
+
+## Beta / Pre-release Process
+
+Beta releases allow users to test upcoming features before a final release. They are published to npm under the `beta` dist-tag so that a plain `npm install @jenbuska/yielded` **never** installs a beta version.
+
+### Publishing a Beta
+
+1. **Set the pre-release version** in `package.json`:
+   ```bash
+   # First beta for an upcoming release
+   npm version X.Y.Z-beta.0 --no-git-tag-version
+
+   # Increment beta counter for subsequent fixes
+   npm version X.Y.Z-beta.1 --no-git-tag-version
+   ```
+
+2. **Run all checks**:
+   ```bash
+   npm run check-all
+   ```
+
+3. **Publish with the `beta` tag**:
+   ```bash
+   npm run publish:beta
+   ```
+   This runs `npm publish --tag beta --access public`. The `prepublishOnly` hook builds the package automatically before publishing.
+
+4. **Verify the tag on npm**:
+   ```bash
+   npm dist-tag ls @jenbuska/yielded
+   # Expected output:
+   #   beta: X.Y.Z-beta.0
+   #   latest: X.Y.(Z-1)   ← last stable release, unchanged
+   ```
+   The `latest` tag must still point to the last stable release — do **not** pass `--tag latest` during a beta publish.
+
+5. **Commit and push** the version bump:
+   ```bash
+   git add package.json package-lock.json CHANGELOG.md
+   git commit -m "chore: X.Y.Z-beta.0"
+   git push
+   ```
+
+### Installing a Beta
+
+Users can opt in to a beta version explicitly. A plain install will never pick up a beta release.
+
+```bash
+# Install the latest beta
+npm install @jenbuska/yielded@beta
+
+# Install a specific beta version
+npm install @jenbuska/yielded@X.Y.Z-beta.0
+
+# Check which version you have installed
+npm ls @jenbuska/yielded
+```
+
+To go back to the latest stable release:
+```bash
+npm install @jenbuska/yielded@latest
+```
+
+### Promoting a Beta to Stable
+
+Once the beta has been validated, promote it to stable by:
+
+1. Remove the pre-release suffix from the version (`X.Y.Z-beta.0` → `X.Y.Z`):
+   ```bash
+   npm version X.Y.Z --no-git-tag-version
+   ```
+2. Follow the standard [Release Process](#release-process) steps.
+3. After publishing stable, move the `beta` dist-tag forward (optional):
+   ```bash
+   npm dist-tag add @jenbuska/yielded@X.Y.Z beta
+   ```
+
+---
 
 ## Release Process
 

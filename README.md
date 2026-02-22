@@ -4,8 +4,9 @@ A TypeScript library for composing and transforming values from synchronous iter
 
 [![CI](https://img.shields.io/github/actions/workflow/status/jEnbuska/yielded/ci.yml?branch=main&label=CI)](https://github.com/jEnbuska/yielded/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node.js-20.5.0+-green.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node.js-20.4.0+-green.svg)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-@jenbuska/yielded-red.svg)](https://www.npmjs.com/package/@jenbuska/yielded)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://www.npmjs.com/package/@jenbuska/yielded?activeTab=dependencies)
 
 ## Features
 
@@ -16,23 +17,35 @@ A TypeScript library for composing and transforming values from synchronous iter
 - 🛡️ **Type-Safe** - Full TypeScript support with comprehensive type inference
 - 🎯 **Cancelable** - Integrated AbortSignal support for canceling async operations
 - 🌊 **Composable** - Chain multiple operations together for complex data transformations
+- 🪶 **Zero Dependencies** - No external runtime dependencies; installs nothing beyond the package itself
 
 ## Compatibility
 
-**⚠️ Important: Node.js and Browser Requirements**
+**Node.js Requirements**
 
-This library requires **Node.js 20.5.0 or newer** because it uses ES2023 features including:
-- The `using` keyword for [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management)
-- `Symbol.dispose` and `Symbol.asyncDispose` for automatic cleanup
+This library requires **Node.js 20.4.0 or newer** (Node 20, 22, 24 LTS releases are all supported and tested in CI).
+
+> **Why 20.4.0?** The runtime cleanup mechanism relies on `Symbol.dispose` and `Symbol.asyncDispose`, which were introduced in Node.js 20.4.0. The published bundle no longer uses the `using` keyword (it was replaced with `try/finally`), so older versions of Node that didn't support `using` now work fine.
 
 **Browser Support:**
-- ✅ **Modern Browsers**: Chrome 90+, Firefox 88+, Edge 90+ (with full ES2022+ support)
-- ⚠️ **Safari & Older Browsers**: May require polyfills or transpilation with [Babel](https://babeljs.io/) to support the `using` keyword and disposal symbols
+- ✅ **Chrome** 90+ (full ES2022+ support)
+- ✅ **Firefox** 88+ (full ES2022+ support)
+- ✅ **Edge** 90+ (full ES2022+ support)
+- ✅ **Safari** — tested and working via WebKit (ES2022+ supported in modern Safari releases)
 
-If you need to support older browsers or Safari versions without native support for these features, you will need to:
-1. Use Babel with appropriate plugins to transpile the `using` keyword
-2. Include polyfills for `Symbol.dispose` and `Symbol.asyncDispose`
-3. Configure your build toolchain to target the appropriate JavaScript version
+The published bundle targets ES2022 and has no runtime dependencies, so it works in all modern browsers without additional configuration.
+
+**TypeScript Configuration**
+
+No special TypeScript `lib` settings are needed specifically for this package. The table below shows what standard configs already cover everything:
+
+| Environment | Recommended `lib` | Notes |
+|-------------|-------------------|-------|
+| Node.js | `["ES2022"]` or `["ESNext"]` | `AbortSignal` (for `withSignal`) is included via `@types/node` |
+| Browser (React, Vue, etc.) | `["ES2022", "DOM"]` | Standard browser config; `AbortSignal` comes from the `DOM` lib |
+
+> **`DOM.Iterable` is NOT required by `@jenbuska/yielded`.**  
+> You may see it in the `examples/react-vite` project — that is standard boilerplate for Vite browser apps (it adds `Symbol.iterator` support to DOM APIs such as `NodeList` and `HTMLCollection`) and has nothing to do with this library's types. Include it in your own config if your application code iterates over DOM collections directly.
 
 ## Installation
 
@@ -645,17 +658,16 @@ const asyncNumbers: IAsyncYielded<number> = Yielded.from(asyncGenerator());
 
 ## Browser and Node.js Support
 
-**Node.js:**
-- **Minimum version: 20.5.0+** (required for `using` keyword and disposal symbols)
-- ES2023 features support required
+**Node.js** (CI-tested on all active LTS releases):
+- ✅ Node.js 20 (maintenance LTS, 20.4.0+ required for `Symbol.dispose`)
+- ✅ Node.js 22 (active LTS)
+- ✅ Node.js 24 (current)
 
-**Browsers:**
-- **Modern browsers** with ES2022+ support: Chrome 90+, Firefox 88+, Edge 90+
-- **Safari & Legacy browsers**: Require polyfills or Babel transpilation for:
-  - `using` keyword (Explicit Resource Management)
-  - `Symbol.dispose` and `Symbol.asyncDispose`
-
-For production use with broad browser support, configure your build pipeline with Babel and appropriate polyfills.
+**Browsers** (all tested with Playwright in CI):
+- ✅ Chrome 90+
+- ✅ Firefox 88+
+- ✅ Edge 90+
+- ✅ Safari — works out of the box (WebKit, no polyfills needed)
 
 ## Contributing
 
