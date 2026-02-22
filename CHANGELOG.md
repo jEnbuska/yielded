@@ -5,10 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0-beta.0] - 2026-02-22
-
-> **Beta release.** Please test and [report any issues](https://github.com/jEnbuska/yielded/issues) before the final 2.1.0 release.
-> Install: `npm install @jenbuska/yielded@beta`
+## [2.1.0] - 2026-02-22
 
 ### Added
 - **Example projects** under `examples/` that verify the package works when consumed as a dependency:

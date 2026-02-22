@@ -407,11 +407,11 @@ Beta releases allow users to test upcoming features before a final release. They
 
 1. **Set the pre-release version** in `package.json`:
    ```bash
-   # First beta for an upcoming minor release
-   npm version 2.1.0-beta.0 --no-git-tag-version
+   # First beta for an upcoming release
+   npm version X.Y.Z-beta.0 --no-git-tag-version
 
    # Increment beta counter for subsequent fixes
-   npm version 2.1.0-beta.1 --no-git-tag-version
+   npm version X.Y.Z-beta.1 --no-git-tag-version
    ```
 
 2. **Run all checks**:
@@ -429,15 +429,15 @@ Beta releases allow users to test upcoming features before a final release. They
    ```bash
    npm dist-tag ls @jenbuska/yielded
    # Expected output:
-   #   beta: 2.1.0-beta.0
-   #   latest: 2.0.0
+   #   beta: X.Y.Z-beta.0
+   #   latest: X.Y.(Z-1)   ← last stable release, unchanged
    ```
    The `latest` tag must still point to the last stable release — do **not** pass `--tag latest` during a beta publish.
 
 5. **Commit and push** the version bump:
    ```bash
    git add package.json package-lock.json CHANGELOG.md
-   git commit -m "chore: 2.1.0-beta.0"
+   git commit -m "chore: X.Y.Z-beta.0"
    git push
    ```
 
@@ -450,7 +450,7 @@ Users can opt in to a beta version explicitly. A plain install will never pick u
 npm install @jenbuska/yielded@beta
 
 # Install a specific beta version
-npm install @jenbuska/yielded@2.1.0-beta.0
+npm install @jenbuska/yielded@X.Y.Z-beta.0
 
 # Check which version you have installed
 npm ls @jenbuska/yielded
@@ -465,14 +465,14 @@ npm install @jenbuska/yielded@latest
 
 Once the beta has been validated, promote it to stable by:
 
-1. Remove the pre-release suffix from the version (`2.1.0-beta.0` → `2.1.0`):
+1. Remove the pre-release suffix from the version (`X.Y.Z-beta.0` → `X.Y.Z`):
    ```bash
-   npm version 2.1.0 --no-git-tag-version
+   npm version X.Y.Z --no-git-tag-version
    ```
 2. Follow the standard [Release Process](#release-process) steps.
 3. After publishing stable, move the `beta` dist-tag forward (optional):
    ```bash
-   npm dist-tag add @jenbuska/yielded@2.1.0 beta
+   npm dist-tag add @jenbuska/yielded@X.Y.Z beta
    ```
 
 ---
