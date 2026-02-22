@@ -12,6 +12,7 @@ Thank you for your interest in contributing to Yielded! This document provides g
 - [Code Style](#code-style)
 - [Submitting Changes](#submitting-changes)
 - [Project Structure](#project-structure)
+- [Local Testing with npm link](#local-testing-with-npm-link)
 - [Release Process](#release-process)
 
 ## Code of Conduct
@@ -55,7 +56,8 @@ npm ci
 
 - `npm run validate` - Run TypeScript type checking
 - `npm run validate:watch` - Run TypeScript type checking in watch mode
-- `npm run build` - Build the project (compiles TypeScript)
+- `npm run build` - Remove `dist`, then build the project (compiles TypeScript)
+- `npm run link` - Build the project and register it globally via `npm link` for local testing
 - `npm test` - Run all tests with coverage
 - `npm run test:watch` - Run tests in watch mode with UI
 - `npm run lint` - Check code for linting errors
@@ -296,6 +298,51 @@ yielded/
 ├── dist/               # Compiled output (generated)
 ├── README.md           # Project documentation
 └── CONTRIBUTING.md     # This file
+```
+
+## Local Testing with npm link
+
+Before publishing a new version, you can verify the package works correctly in a real consumer project using `npm link`. This creates a symlink from the global `node_modules` to your local build, letting you test the built output as if it were installed from the registry.
+
+### Step 1 — Build and link the package
+
+In the `yielded` repository directory, run:
+
+```bash
+npm run link
+```
+
+This runs `npm run build` (which removes the existing `dist`, recompiles JavaScript with `tsup`, and emits TypeScript declarations with `tsc`) and then registers the package globally via `npm link`.
+
+### Step 2 — Link into a consumer project
+
+In the directory of the project you want to test with, run:
+
+```bash
+npm link @jenbuska/yielded
+```
+
+This replaces the installed copy with a symlink to your local build. You can now import from `@jenbuska/yielded` and see your local changes immediately after each `npm run build`.
+
+### Step 3 — Verify the integration
+
+Write or run whatever tests exist in the consumer project. Typical things to check:
+
+- TypeScript types resolve correctly (run `tsc --noEmit` in the consumer)
+- Runtime behavior matches expectations
+- Tree-shaking / bundling works as expected with your build toolchain
+
+### Step 4 — Clean up
+
+Once you are done, remove the link from the consumer project and restore the published version:
+
+```bash
+# In the consumer project
+npm unlink @jenbuska/yielded
+npm install
+
+# In the yielded repo (remove the global link)
+npm unlink
 ```
 
 ## Release Process

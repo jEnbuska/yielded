@@ -40,7 +40,8 @@
   "scripts": {
     "validate": "tsc --noEmit",
     "validate:watch": "tsc --watch",
-    "build": "tsup && tsc --project tsconfig.build.json",
+    "build": "rm -rf dist && tsup && tsc --project tsconfig.build.json",
+    "link": "npm run build && npm link",
     "prepublishOnly": "npm run build",
     "test": "USE_POLYFILLS=true vitest run --coverage && vitest run --coverage",
     "test:watch": "vitest --watch",
