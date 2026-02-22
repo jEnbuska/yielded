@@ -363,23 +363,33 @@ npm start       # node dist/index.js
 
 ### `examples/react-vite` — Vite + React + TypeScript
 
-A minimal React app with a counter button. Each click uses Yielded internally to derive the new state. Includes a **Puppeteer browser test suite** that tests against Chrome and Firefox.
+A minimal React app with a counter button. Each click uses Yielded internally to derive the new state. Includes a **Playwright browser test suite** that tests against Chromium, Firefox, WebKit (Safari), and Edge.
 
 ```bash
 cd examples/react-vite
 npm install
+npx playwright install  # download Playwright-managed browsers (first time only)
 npm run build   # type-check + vite build
-npm test        # build + puppeteer tests (Chrome & Firefox)
+npm test        # build + playwright tests (Chromium, Firefox, WebKit, Edge)
 npm run dev     # start dev server
 ```
 
-#### Puppeteer tests
+#### Playwright tests
 
-The tests live in `examples/react-vite/tests/browser.test.ts`. They use `vite preview` to serve the built app locally and then launch Chrome and Firefox via the system-installed executables (no additional browser download required). For each browser the tests check:
+The tests live in `examples/react-vite/tests/app.spec.ts`. Playwright's `webServer` option starts `vite preview` automatically before the tests and shuts it down afterwards — no manual server management needed. For each browser the tests check:
 
 - The app loads and shows an initial count of `0`
 - Clicking the **Increment** button updates the count to `1`
-- Three clicks update the count to `3` and the items list shows the correct doubled values
+- Three clicks update the count to `3` and the items list shows the correct doubled values `[2, 4, 6]`
+
+Browsers tested:
+
+| Project | Engine | Equivalent to |
+|---------|--------|---------------|
+| Chromium | Blink | Chrome |
+| Firefox | Gecko | Firefox |
+| WebKit (Safari) | WebKit | Safari |
+| Edge | Blink | Microsoft Edge |
 
 To run the example tests from the repository root:
 
