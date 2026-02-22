@@ -30,8 +30,9 @@ const upper = await Yielded.from(
 console.log("Uppercased:", upper); // ["HELLO", "YIELDED", "WORLD"]
 
 // groupBy: group numbers by even/odd
-const grouped = Yielded.from([1, 2, 3, 4, 5])
-  .groupBy((n) => (n % 2 === 0 ? "even" : "odd"));
+const grouped = Yielded.from([1, 2, 3, 4, 5]).groupBy((n) =>
+  n % 2 === 0 ? "even" : "odd",
+);
 
 console.log("Grouped:", grouped); // { odd: [1, 3, 5], even: [2, 4] }
 

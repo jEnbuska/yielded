@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-22
+
+### Added
+- **Example projects** under `examples/` that verify the package works when consumed as a dependency:
+  - `examples/node-ts` — barebones Node.js TypeScript project demonstrating sync and async pipelines
+  - `examples/react-vite` — Vite 7 + React 19 app wired through Yielded with a counter button
+- **Cross-browser Playwright test suite** in `examples/react-vite/tests/app.spec.ts` covering Chromium, Firefox, WebKit (Safari), and Edge
+- CI jobs for both example projects (`test-example-node`, `test-example-react`)
+- `test:examples`, `test:example:node`, `test:example:react` npm scripts in root `package.json`
+- `check-all` now includes example project verification
+- `npm run link` script for local integration testing before publishing
+
+### Changed
+- **Bundle size reduced by 57%** (55.46 KB → 23.45 KB): enabled `minify: true` in tsup and replaced `using` keyword with `try/finally` blocks, eliminating the tsup-generated polyfill helpers
+- **TypeScript declarations fixed**: switched from `tsc --emitDeclarationOnly` to tsup's `dts: true` option — all types are now bundled into a single `dist/index.d.ts` with no cross-file `.ts` extension references, so consumer projects resolve types correctly without any extra tsconfig flags
+- Build script now cleans `dist/` before building (`rm -rf dist && tsup`)
+- `prettier` and `prettier:write` scripts now also cover `./examples`
+- Updated README: removed outdated Safari compatibility warning; Safari is now ✅ fully supported (verified via Playwright WebKit tests in CI)
+- Updated `Browser and Node.js Support` sections throughout README to reflect confirmed cross-browser support
+
+### Fixed
+- Declaration files previously contained `.ts` extensions in import paths (e.g. `from "./sync/types.ts"`), which caused TypeScript errors in consumer projects that lacked `allowImportingTsExtensions`. Now fixed by bundling all types into one file.
+
 ## [2.0.0] - 2026-02-18
 
 ### Added

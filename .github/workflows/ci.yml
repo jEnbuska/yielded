@@ -133,3 +133,69 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+  test-example-node:
+    name: Node TypeScript Example
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies and build library
+        run: npm ci && npm run build
+
+      - name: Install example dependencies
+        working-directory: examples/node-ts
+        run: npm ci
+
+      - name: Build Node TypeScript example
+        working-directory: examples/node-ts
+        run: npm run build
+
+  test-example-react:
+    name: React Vite Example (Playwright)
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies and build library
+        run: npm ci && npm run build
+
+      - name: Install example dependencies
+        working-directory: examples/react-vite
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: examples/react-vite
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Build and run Playwright tests
+        working-directory: examples/react-vite
+        run: npm test -- --project=Chromium --project=Firefox --project="WebKit (Safari)"
+
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: examples/react-vite/playwright-report/
+          retention-days: 7

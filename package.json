@@ -1,6 +1,6 @@
 {
   "name": "@jenbuska/yielded",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A TypeScript library for composing and transforming values from synchronous iterables and asynchronous generators through a uniform, lazy-evaluated pipeline API",
   "keywords": [
     "iterator",
@@ -50,9 +50,9 @@
     "test:example:react": "npm run build && cd examples/react-vite && npm ci && npm test",
     "lint": "eslint --ext .ts --max-warnings 0 ./src",
     "lint:fix": "eslint --fix --ext .ts ./src",
-    "prettier": "prettier --check ./src",
-    "prettier:write": "prettier --write ./src",
-    "check-all": "npm run prettier && npm run validate && npm run lint && npm run test"
+    "prettier": "prettier --check ./src ./examples",
+    "prettier:write": "prettier --write ./src ./examples",
+    "check-all": "npm run prettier && npm run validate && npm run lint && npm run test && npm run test:examples"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
