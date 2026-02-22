@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    // "DOM.Iterable" is standard Vite/browser-app boilerplate.
+    // It adds Symbol.iterator to DOM APIs (NodeList, HTMLCollection, etc.).
+    // It is NOT required by @jenbuska/yielded — the library's types only
+    // need ES2022 (for Iterable/Iterator) and DOM (for AbortSignal).
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",

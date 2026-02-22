@@ -35,6 +35,18 @@ This library requires **Node.js 20.4.0 or newer** (Node 20, 22, 24 LTS releases 
 
 The published bundle targets ES2022 and has no runtime dependencies, so it works in all modern browsers without additional configuration.
 
+**TypeScript Configuration**
+
+No special TypeScript `lib` settings are needed specifically for this package. The table below shows what standard configs already cover everything:
+
+| Environment | Recommended `lib` | Notes |
+|-------------|-------------------|-------|
+| Node.js | `["ES2022"]` or `["ESNext"]` | `AbortSignal` (for `withSignal`) is included via `@types/node` |
+| Browser (React, Vue, etc.) | `["ES2022", "DOM"]` | Standard browser config; `AbortSignal` comes from the `DOM` lib |
+
+> **`DOM.Iterable` is NOT required by `@jenbuska/yielded`.**  
+> You may see it in the `examples/react-vite` project — that is standard boilerplate for Vite browser apps (it adds `Symbol.iterator` support to DOM APIs such as `NodeList` and `HTMLCollection`) and has nothing to do with this library's types. Include it in your own config if your application code iterates over DOM collections directly.
+
 ## Installation
 
 ```bash
