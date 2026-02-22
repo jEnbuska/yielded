@@ -368,11 +368,12 @@ A minimal React app with a counter button. Each click uses Yielded internally to
 ```bash
 cd examples/react-vite
 npm install
-npx playwright install  # download Playwright-managed browsers (first time only)
 npm run build   # type-check + vite build
-npm test        # build + playwright tests (Chromium, Firefox, WebKit, Edge)
+npm test        # build + install Playwright browsers + run tests (Chromium, Firefox, WebKit, Edge)
 npm run dev     # start dev server
 ```
+
+> **Note:** `npm test` automatically downloads the required Playwright-managed browsers the first time it runs via `npm run install:browsers`. On subsequent runs, Playwright skips the download if the browsers are already cached — so there is no overhead after the first install. **Edge** is not downloaded by this script; its tests run only when Microsoft Edge is installed on the system, and are skipped otherwise.
 
 #### Playwright tests
 
@@ -389,9 +390,9 @@ Browsers tested:
 | Chromium | Blink | Chrome |
 | Firefox | Gecko | Firefox |
 | WebKit (Safari) | WebKit | Safari |
-| Edge | Blink | Microsoft Edge |
+| Edge | Blink | Microsoft Edge (system-installed; tests run only if Edge is present) |
 
-To run the example tests from the repository root:
+To run the example tests from the repository root (browsers are installed automatically):
 
 ```bash
 npm run test:examples

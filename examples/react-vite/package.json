@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "npm run build && playwright test"
+    "install:browsers": "playwright install --with-deps chromium firefox webkit",
+    "test": "npm run build && npm run install:browsers && playwright test"
   },
   "dependencies": {
     "@jenbuska/yielded": "file:../../",
