@@ -61,13 +61,16 @@ export class ParallelYieldedResolver<T>
     cb: (...args: TArgs) => IParallelResolverSubConfig<T, TReturn>,
     ...args: TArgs
   ): Promise<TReturn> {
-    using generator = this.generator;
-    return await ParallelGeneratorResolver.run({
-      generator,
-      signal: this.signal,
-      parallel: this._parallel,
-      ...cb(...args),
-    });
+    try {
+      return await ParallelGeneratorResolver.run({
+        generator: this.generator,
+        signal: this.signal,
+        parallel: this._parallel,
+        ...cb(...args),
+      });
+    } finally {
+      this.generator[Symbol.dispose]();
+    }
   }
 
   forEach(...args: Parameters<IAsyncYieldedResolver<T>["forEach"]>) {

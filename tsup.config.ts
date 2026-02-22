@@ -10,4 +10,5 @@ export default defineConfig({
   outDir: "dist",
   splitting: false,
   treeshake: true,
+  minify: true,
 });

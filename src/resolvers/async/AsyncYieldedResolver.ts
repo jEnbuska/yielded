@@ -35,9 +35,12 @@ export class AsyncYieldedResolver<T>
   }
 
   async *[Symbol.asyncIterator]() {
-    using generator = this.generator;
-    for await (const next of generator) {
-      yield next;
+    try {
+      for await (const next of this.generator) {
+        yield next;
+      }
+    } finally {
+      this.generator[Symbol.dispose]();
     }
   }
 
@@ -61,8 +64,11 @@ export class AsyncYieldedResolver<T>
     cb: (...args: [IYieldedAsyncGenerator<T>, ...TArgs]) => Promise<TReturn>,
     ...args: TArgs
   ): Promise<TReturn> {
-    using generator = this.generator;
-    return await cb(generator, ...args);
+    try {
+      return await cb(this.generator, ...args);
+    } finally {
+      this.generator[Symbol.dispose]();
+    }
   }
 
   forEach(...args: Parameters<IAsyncYieldedResolver<T>["forEach"]>) {

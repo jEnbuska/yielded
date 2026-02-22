@@ -33,9 +33,12 @@ export class YieldedResolver<T>
   }
 
   *[Symbol.iterator]() {
-    using generator = this.generator;
-    for (const next of generator) {
-      yield next;
+    try {
+      for (const next of this.generator) {
+        yield next;
+      }
+    } finally {
+      this.generator[Symbol.dispose]();
     }
   }
 
@@ -59,8 +62,11 @@ export class YieldedResolver<T>
     cb: (...args: [IYieldedSyncGenerator<T>, ...TArgs]) => TReturn,
     ...args: TArgs
   ): TReturn {
-    using generator = this.generator;
-    return cb(generator, ...args);
+    try {
+      return cb(this.generator, ...args);
+    } finally {
+      this.generator[Symbol.dispose]();
+    }
   }
 
   forEach(
