@@ -3,6 +3,7 @@
 ## CI Workflow (`ci.yml`)
 
 This workflow runs automated quality checks **automatically** for all pull requests and merges:
+
 - **Automatic** when PR is opened or marked as ready for review
 - **Automatic** after merging to protected branches
 - **Manual** trigger available as backup option
@@ -31,7 +32,9 @@ The workflow runs four parallel jobs:
 ### When CI Runs
 
 #### Automatic Runs for Pull Requests
+
 CI runs **automatically** for anyone who creates or updates a PR to `main` or `release/*` branches:
+
 - ✅ When PR is **opened** (created)
 - ✅ When draft PR is marked as **ready for review**
 - ✅ When new **commits are pushed** to the PR branch
@@ -40,16 +43,20 @@ CI runs **automatically** for anyone who creates or updates a PR to `main` or `r
 **No manual trigger needed** - CI starts automatically for all PRs!
 
 #### Automatic Runs After Merge
+
 CI runs **automatically** when code is pushed to:
+
 - `main` branch
 - `release/*` branches
 
 This happens after PRs are merged to verify the integrated code.
 
 #### Manual Runs (Backup Option)
+
 CI can still be **manually triggered** if needed:
 
 **To run CI from the Actions tab:**
+
 1. Go to **Actions** tab: https://github.com/jEnbuska/yielded/actions
 2. Click **CI** workflow in the left sidebar
 3. Click **"Run workflow"** button (top right)
@@ -69,6 +76,7 @@ For pull requests to `main` or `release/` branches:
 6. ✅ **CI runs automatically** after merge to verify integration
 
 If changes are made to the PR after approval:
+
 - ⚠️ Approval may be automatically dismissed (if stale approval dismissal is enabled)
 - ✅ **CI runs automatically** on the new commits
 - ⚠️ All checks must pass again
@@ -128,13 +136,16 @@ For both `main` and `release/*` branch patterns:
 ### Troubleshooting
 
 **Issue:** CI doesn't run automatically on PR
+
 - **Solution:** Check that the PR targets `main` or a `release/*` branch. PRs to other branches won't trigger CI automatically.
 
 **Issue:** Workflow fails with permission errors
+
 - **Solution:** Ensure the repository has GitHub Actions enabled in Settings → Actions → General.
 
 **Issue:** Tests fail in CI but pass locally
-- **Solution:** 
+
+- **Solution:**
   - Check that dependencies are correctly specified in `package.json`
   - Ensure tests don't depend on local environment variables
   - Review the CI logs for specific error messages

@@ -88,8 +88,8 @@ jobs:
       - name: Run ESLint
         run: pnpm run lint
 
-  prettier:
-    name: Prettier Format Check
+  format:
+    name: Format check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -107,8 +107,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Prettier check
-        run: pnpm run prettier
+      - name: Run the format check
+        run: pnpm run format:check
 
   test:
     name: Test Suite
@@ -140,7 +140,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        node-version: ['20', '22', '24']
+        node-version: ["20", "22", "24"]
       fail-fast: false
     steps:
       - name: Checkout code

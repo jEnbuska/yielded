@@ -18,7 +18,9 @@ GitHub Actions CI workflow has been successfully configured with **automatic tri
 **CI runs automatically for everyone who creates or updates a PR!**
 
 ### Automatic Triggers
+
 CI runs automatically when:
+
 - ✅ PR is **opened** (created)
 - ✅ Draft PR is marked as **ready for review**
 - ✅ New **commits are pushed** to the PR branch
@@ -27,6 +29,7 @@ CI runs automatically when:
 **No manual trigger needed** - just create or update your PR and CI starts automatically!
 
 ### Manual Trigger (Backup Option)
+
 If you need to manually re-run CI:
 
 1. Go to the **Actions** tab: https://github.com/jEnbuska/yielded/actions
@@ -48,6 +51,7 @@ If you need to manually re-run CI:
 6. ✅ **CI runs automatically** after merge for verification
 
 ### If Changes Are Made After Approval:
+
 - ⚠️ **Approval may be automatically dismissed** (if stale approval dismissal is enabled)
 - ✅ **CI runs automatically** on new commits - no manual trigger needed!
 - ⚠️ **Wait for all checks to pass** again
@@ -56,6 +60,7 @@ If you need to manually re-run CI:
 ## 🔄 Automatic Runs
 
 CI runs **automatically** in these scenarios:
+
 - **Pull Requests**: When opened, updated, or marked as ready for review
 - **After Merge**: When code is pushed to `main` or `release/*` branches
 - **For Everyone**: Any contributor can trigger CI by creating or updating a PR
@@ -65,7 +70,9 @@ This provides both pre-merge validation and post-merge verification automaticall
 ## ⚠️ Important Notes
 
 ### Branch Protection Recommended
+
 To enforce quality standards:
+
 1. **Require pull request approvals** before merging
 2. **Dismiss stale approvals** on new commits
 3. **Require status checks to pass** before merging (select all 4 checks)
@@ -74,6 +81,7 @@ To enforce quality standards:
 See branch protection setup guide for detailed configuration.
 
 ### Automatic CI Benefits
+
 - ✅ **Immediate feedback** for all contributors
 - ✅ **No manual intervention** needed to run checks
 - ✅ **Consistent enforcement** across all PRs
@@ -97,6 +105,7 @@ npm run validate && npm run lint && npm run prettier && npm run test
 ## 📚 Documentation
 
 All CI details are documented in:
+
 - `.github/workflows/README.md` - Workflow documentation with manual trigger instructions
 - `.github/workflows/ci.yml` - The actual workflow definition
 - `BRANCH_PROTECTION_SETUP.md` - Complete branch protection guide
@@ -105,6 +114,7 @@ All CI details are documented in:
 ## ✅ Success Criteria
 
 CI is properly configured when:
+
 - [x] CI workflow exists (`.github/workflows/ci.yml`)
 - [x] Workflow uses manual trigger (`workflow_dispatch`)
 - [ ] You can trigger workflow from Actions tab
@@ -114,12 +124,14 @@ CI is properly configured when:
 ---
 
 **Cost Optimization:** Manual triggers ensure you only pay for CI runs you explicitly need!
-npm run lint      # ESLint
-npm run prettier  # Prettier
-npm run test      # Tests
+npm run lint # ESLint
+npm run prettier # Prettier
+npm run test # Tests
 
 # Or run all at once
+
 npm run validate && npm run lint && npm run prettier && npm run test
+
 ```
 
 ## ⚠️ Important Notes
@@ -143,3 +155,4 @@ Branch protection is fully configured when:
 ---
 
 **Time Estimate:** 5-10 minutes after PR merge to complete branch protection setup
+```
