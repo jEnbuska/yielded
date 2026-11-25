@@ -149,10 +149,13 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      # tsdown needs a Node.js that can load its TypeScript config, so the
+      # library and the example are built with the one in .nvmrc, and only
+      # run with the matrix version.
+      - name: Setup Node.js for the build
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -160,6 +163,15 @@ jobs:
 
       - name: Build the library and the Node TypeScript example
         run: pnpm run test:example:node
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run the Node TypeScript example
+        working-directory: examples/node-ts
+        run: node dist/index.js
 
   test-example-react:
     name: React Vite Example (Playwright)
