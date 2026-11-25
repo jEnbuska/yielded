@@ -40,8 +40,6 @@
     "dist"
   ],
   "scripts": {
-    "validate": "tsc --noEmit",
-    "validate:watch": "tsc --watch",
     "build": "tsdown",
     "prepublishOnly": "pnpm run build",
     "publish:beta": "pnpm publish --tag beta --access public",
@@ -51,15 +49,15 @@
     "test:example:node": "pnpm run build && pnpm --filter node-ts-example run build",
     "test:example:react": "pnpm run build && pnpm --filter react-vite-example test",
     "lint": "oxlint",
-    "check-all": "pnpm run format:check && pnpm run validate && pnpm run lint && pnpm run test && pnpm run test:examples",
+    "check-all": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run test:examples",
     "test:coverage": "vitest run --coverage",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.5",
-    "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^24.10.10",
+    "@types/node": "^20.19.43",
     "@vitest/coverage-v8": "^5.1.1",
     "@vitest/ui": "^5.1.1",
     "colors": "^1.4.0",
@@ -67,7 +65,7 @@
     "oxlint": "^1.95.0",
     "publint": "^0.3.25",
     "tsdown": "^0.23.7",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vitest": "^5.1.1"
   },
   "packageManager": "pnpm@12.16.1"
