@@ -44,11 +44,11 @@ export type IYieldedParallel<T> = {
 export function parallel<T>(
   generator: (IYieldedAsyncGenerator<T> | IYieldedSyncGenerator<T>) &
     Disposable,
-  parallel: number,
+  count: number,
 ): IYieldedParallelGenerator<Awaited<T>> {
   return ParallelGenerator.create<T, Awaited<T>>({
     name: "parallel",
-    parallel,
+    parallel: count,
     generator,
   });
 }
