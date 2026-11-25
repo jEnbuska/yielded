@@ -53,14 +53,15 @@
     "test:coverage": "vitest run --coverage",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "knip": "knip --reporter symbols --reporter ./scripts/knip-explain.mts"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.5",
     "@types/node": "^20.19.43",
     "@vitest/coverage-v8": "^5.1.1",
     "@vitest/ui": "^5.1.1",
-    "colors": "^1.4.0",
+    "knip": "^6.48.0",
     "oxfmt": "^0.80.0",
     "oxlint": "^1.95.0",
     "publint": "^0.3.25",
