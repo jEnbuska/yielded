@@ -1,586 +1,157 @@
-# Contributing to Yielded
+# Contributing
 
-Thank you for your interest in contributing to Yielded! This document provides guidelines and instructions for contributing to this project.
+Thank you for helping with Yielded. This page is for people who change the library. If you only use it, the [README](README.md) is for you.
 
-## Table of Contents
+Yielded has two long-lived branches:
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Testing](#testing)
-- [Code Style](#code-style)
-- [Submitting Changes](#submitting-changes)
-- [Project Structure](#project-structure)
-- [Local Testing with npm link](#local-testing-with-npm-link)
-- [Example Projects](#example-projects)
-- [Beta / Pre-release Process](#beta--pre-release-process)
-- [Release Process](#release-process)
+- **`dev`** is the default branch. All work lands here.
+- **`main`** holds what has been released to npm. It only ever receives `dev`.
 
-## Code of Conduct
+## Setting up
 
-By participating in this project, you agree to maintain a respectful and inclusive environment for everyone. We expect all contributors to:
-
-- Be respectful and considerate of others
-- Welcome newcomers and help them get started
-- Focus on what is best for the community
-- Show empathy towards other community members
-
-## Getting Started
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/yielded.git
-   cd yielded
-   ```
-3. **Add the upstream repository**:
-   ```bash
-   git remote add upstream https://github.com/jEnbuska/yielded.git
-   ```
-
-## Development Setup
-
-### Prerequisites
-
-- Node.js 20 or higher
-- npm (comes with Node.js)
-
-### Installation
-
-Install dependencies:
+You need Node.js 24 (the version in [`.nvmrc`](.nvmrc)) and pnpm, in the version pinned in `packageManager` in [`package.json`](package.json). With [Corepack](https://nodejs.org/api/corepack.html), `corepack enable` picks it up.
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 ```
 
-### Available Scripts
+Always run pnpm from the repository root. The root package is the library, and [`examples/node-ts`](examples/node-ts) and [`examples/react-vite`](examples/react-vite) are workspace packages that use the built library the way a project that installs it from npm would.
 
-- `npm run validate` - Run TypeScript type checking
-- `npm run validate:watch` - Run TypeScript type checking in watch mode
-- `npm run build` - Remove `dist`, then build the project (compiles TypeScript)
-- `npm run link` - Build the project and register it globally via `npm link` for local testing
-- `npm test` - Run all tests with coverage
-- `npm run test:watch` - Run tests in watch mode with UI
-- `npm run lint` - Check code for linting errors
-- `npm run lint:fix` - Automatically fix linting errors
-- `npm run prettier` - Check code formatting
-- `npm run prettier:write` - Format code
+## Scripts
 
-## Making Changes
+| Command              | What it does                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| `pnpm typecheck`     | TypeScript 7 type check                                                                            |
+| `pnpm lint`          | [oxlint](https://oxc.rs/docs/guide/usage/linter)                                                   |
+| `pnpm knip`          | Unused files, exports and dependencies ([knip](https://knip.dev)), with an explanation per finding |
+| `pnpm format`        | Formats everything with [oxfmt](https://oxc.rs/docs/guide/usage/formatter); `format:check` checks  |
+| `pnpm test`          | Vitest, once with the native Iterator helpers and once with the library's polyfills forced         |
+| `pnpm test:coverage` | Tests with a coverage report in `coverage/`                                                        |
+| `pnpm build`         | Builds `dist/` with tsdown and checks the package with publint and Are The Types Wrong             |
+| `pnpm test:examples` | Builds the library and runs both examples                                                          |
 
-### Creating a Branch
+The browser example needs Playwright's browsers once: `pnpm --filter react-vite-example exec playwright install chromium firefox webkit`.
 
-Create a new branch for your changes:
+### Before you push
+
+Run `pnpm typecheck`, `pnpm lint`, `pnpm knip`, `pnpm format:check`, `pnpm test` and `pnpm build`, and `pnpm test:examples` when you change `src/` or the examples. CI runs the same checks on every PR.
+
+## How the code is organised
+
+[`src/CLAUDE.md`](src/CLAUDE.md) describes the three flows (sync, async and parallel), where each operator and resolver lives, and the rules they follow: the same behaviour in every flow, lazy evaluation, closing the source when stopping early, and native Iterator helpers with polyfills that behave the same. It's written for Claude Code sessions, and it's the reference for people too.
+
+## The rules
+
+|                                | Into `dev`                                                                                                                     | Into `main`                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
+| Allowed source                 | A PR that links an open issue, a `hotfix/*` branch in this repository, or a [Dependabot](#dependabot) update                   | `dev` of this repository                |
+| Direct pushes                  | Refused, for everyone                                                                                                          | Refused, for everyone                   |
+| Force-pushes and deletion      | Refused, for everyone                                                                                                          | Refused, for everyone                   |
+| Must be up to date with target | Yes                                                                                                                            | Yes                                     |
+| Checks that must pass          | `Lint, format, typecheck, test & build`, the `Node example` and `Browser example` jobs, `PR rules`, and CodeQL's code scanning | The same, and the full dependency audit |
+| How it lands                   | Rebase and merge                                                                                                               | Fast-forward, by the Release workflow   |
+| Who merges                     | The maintainer                                                                                                                 | The maintainer                          |
+
+CI skips the work a PR's changes can't affect, and a skipped check counts as passing. Which checks run for which changed files is in [`.github/CLAUDE.md`](.github/CLAUDE.md), and the filter itself is the "Decide which jobs run" step in [`ci.yml`](.github/workflows/ci.yml).
+
+## Opening a pull request
+
+1. Find or open an issue, and start your branch from `dev`. Name it `<TICKET_NUMBER>-<name>`, for example `38-sync-reduce`.
+2. Start each commit message with the ticket number and a space, without `#`: `38 Return the value from sync reduce`. Git deletes lines that start with `#` as comments whenever it opens a message in your editor, such as when a rebase stops on a conflict, so a `#N` subject would be lost. Commits on a `hotfix/*` branch have no ticket number.
+3. If users can notice the change (a fix, a feature, a changed behaviour or type), add a line under `## [Unreleased]` in [`CHANGELOG.md`](CHANGELOG.md). A breaking change says how to migrate.
+4. Open the PR against `dev`, with `Closes #N`, `Fixes #N` or `Resolves #N` in its description. The issue has to be open; it closes when the PR merges. Title the PR with its branch name, and add a colon and a few words when the name doesn't explain it: `38-sync-reduce: return the value, not a Promise`.
+5. Keep the branch up to date by rebasing (see below).
+
+A bug fix comes with a test that fails without it. A new operator or resolver works in all three flows, is tested in each, and has JSDoc with an example whose shown output is the real output.
+
+When an issue is too big for one PR, split it. Pieces that can't be built on their own become [sub-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/adding-sub-issues) of the original issue (`gh issue create --parent <N>`). Work that can be built on its own becomes a separate issue. The same goes for whatever a PR leaves undone: move it to a sub-issue or a separate issue before the PR merges.
+
+## When a PR can merge
+
+A PR merges only when it's up to date with its base branch and every required check has passed on its current head commit. This holds for the maintainer too: the rulesets have no bypass.
+
+When a PR falls behind, rebase it onto its base and push:
 
 ```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/your-bug-fix
+git fetch origin
 ```
-
-Use descriptive branch names:
-- `feature/` for new features
-- `fix/` for bug fixes
-- `docs/` for documentation changes
-- `test/` for test additions or modifications
-- `refactor/` for code refactoring
-
-### Coding Guidelines
-
-1. **TypeScript**: All code must be written in TypeScript with proper type annotations
-2. **Lazy Evaluation**: Maintain the lazy evaluation principle - operations should not execute until consumed
-3. **Memory Efficiency**: Ensure operations process one item at a time without creating intermediate arrays
-4. **Error Handling**: Provide clear error messages with helpful context
-5. **Documentation**: Document all public APIs with JSDoc comments including:
-   - Description of what the function does
-   - `@example` showing typical usage
-   - Links to MDN documentation for native Iterator methods (when applicable)
-
-### Example Code Structure
-
-```typescript
-export interface IYieldedOperation<T, TFlow extends IYieldedFlow> {
-  /**
-   * Brief description of what this operation does.
-   *
-   * More detailed explanation if needed, including any important
-   * behavioral notes or edge cases.
-   *
-   * @example
-   * ```ts
-   * Yielded.from([1, 2, 3])
-   *   .operation()
-   *   .toArray() // Expected output
-   * ```
-   */
-  operation(param: Type): INextYielded<TOut, TFlow>;
-}
-```
-
-## Testing
-
-### Writing Tests
-
-All new features and bug fixes must include tests. We use Vitest for testing.
-
-1. **Test Location**: Place tests in the `tests/` directory, mirroring the source structure
-2. **Test Coverage**: Aim for high test coverage of new code
-3. **Test Types**: Include tests for:
-   - Synchronous operations
-   - Asynchronous operations
-   - Parallel operations
-   - Edge cases (empty iterators, single items, etc.)
-   - Error conditions
-
-### Running Tests
 
 ```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run specific test file
-npx vitest run tests/path/to/test.test.ts
+git rebase origin/dev
 ```
-
-### Stress Tests
-
-When adding features that handle large datasets, include stress tests in `tests/stress/`:
-
-```typescript
-test("should handle large dataset", () => {
-  const size = 100_000;
-  const result = Yielded.from(function* () {
-    for (let i = 0; i < size; i++) {
-      yield i;
-    }
-  }())
-    .operation()
-    .take(10)
-    .toArray();
-  
-  expect(result).toHaveLength(10);
-});
-```
-
-## Code Style
-
-### Linting and Formatting
-
-This project uses ESLint and Prettier to maintain code quality and consistency.
-
-**Before committing**, ensure your code passes all checks:
 
 ```bash
-# Check linting
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Check formatting
-npm run prettier
-
-# Format code
-npm run prettier:write
-
-# Validate TypeScript types
-npm run validate
+git push --force-with-lease
 ```
 
-### Naming Conventions
+Or press "Update branch" on the PR and pick "Update with rebase", not "Update with merge commit". After GitHub rebases the branch, fetch and reset or rebase your local branch onto it before pushing again.
 
-- **Variables/Functions**: camelCase (`myVariable`, `myFunction`)
-- **Classes/Interfaces**: PascalCase (`MyClass`, `IMyInterface`)
-- **Types**: PascalCase (`MyType`)
-- **Constants**: UPPER_SNAKE_CASE for true constants, camelCase for config objects
-- **Private Class Members**: Prefix with `#` (`#privateMethod`)
+GitHub's rebase drops empty commits, but `git rebase` keeps them. So "Update branch" on a draft PR whose only commit is an empty "Start" commit moves the branch to the base's tip, and GitHub then closes the PR. Rebase such a PR with `git rebase` instead.
 
-## Submitting Changes
+## Answering review comments
 
-### Before Submitting
+The maintainer reviews PRs on GitHub. Answer every comment on your PR on GitHub, in that comment's thread, so the PR records what was asked and what came of it. Reviews and plain PR comments have no threads, so answer them with a PR comment that quotes them. When the answer is about code, link the commit or a permalink to the line, not a branch, which moves.
 
-1. **Sync with upstream**:
-   ```bash
-   git fetch upstream
-   git rebase upstream/main
-   ```
+Claude Code sessions follow the same rules, with the commands in the [`pull-requests` skill](.claude/skills/pull-requests/SKILL.md). The rules sessions follow are in [`CLAUDE.md`](CLAUDE.md).
 
-2. **Run all checks**:
-   ```bash
-   npm run lint
-   npm run prettier
-   npm run validate
-   npm test
-   npm run build
-   ```
+## Rebasing PRs after a merge
 
-3. **Commit your changes** with clear, descriptive messages:
-   ```bash
-   git commit -m "Add feature: description of what you added"
-   ```
-
-### Commit Message Guidelines
-
-Write clear and meaningful commit messages:
-
-- Use the imperative mood ("Add feature" not "Added feature")
-- Keep the first line under 50 characters
-- Provide detailed explanation in the body if needed
-- Reference issue numbers when applicable
-
-Examples:
-```
-Add parallel processing support for flatMap
-
-Implements configurable concurrency for async operations
-in flatMap, allowing up to 50 parallel operations.
-
-Fixes #123
-```
-
-### Creating a Pull Request
-
-1. **Push your branch**:
-   ```bash
-   git push origin your-branch-name
-   ```
-
-2. **Create a Pull Request** on GitHub
-
-3. **PR Description** should include:
-   - What changes were made and why
-   - How to test the changes
-   - Links to related issues
-   - Screenshots (for UI changes)
-   - Breaking changes (if any)
-
-4. **PR Checklist**:
-   - [ ] Code follows the project's style guidelines
-   - [ ] Tests added/updated and passing
-   - [ ] Documentation updated (if applicable)
-   - [ ] No new linting errors
-   - [ ] Build succeeds
-   - [ ] All CI checks pass
-
-### PR Review Process
-
-- Maintainers will review your PR and may request changes
-- Address feedback by pushing new commits to your branch
-- Once approved, a maintainer will merge your PR
-
-## Project Structure
-
-```
-yielded/
-├── src/
-│   ├── async/          # Async iterator implementations
-│   ├── generators/     # Generator operations (map, filter, etc.)
-│   │   ├── apply/      # Operation implementations
-│   │   ├── async/      # Async generator types
-│   │   ├── parallel/   # Parallel processing
-│   │   └── sync/       # Sync generator types
-│   ├── general/        # Shared utilities and types
-│   ├── parallel/       # Parallel iterator implementations
-│   ├── resolvers/      # Terminal operations (toArray, reduce, etc.)
-│   │   ├── apply/      # Resolver implementations
-│   │   ├── async/      # Async resolvers
-│   │   ├── parallel/   # Parallel resolvers
-│   │   └── sync/       # Sync resolvers
-│   ├── sync/           # Sync iterator implementations
-│   └── index.ts        # Main entry point
-├── tests/              # Test files
-│   ├── generators/     # Generator tests
-│   ├── resolvers/      # Resolver tests
-│   ├── stress/         # Stress tests for large datasets
-│   └── utils/          # Test utilities
-├── dist/               # Compiled output (generated)
-├── README.md           # Project documentation
-└── CONTRIBUTING.md     # This file
-```
-
-## Local Testing with npm link
-
-Before publishing a new version, you can verify the package works correctly in a real consumer project using `npm link`. This creates a symlink from the global `node_modules` to your local build, letting you test the built output as if it were installed from the registry.
-
-### Step 1 — Build and link the package
-
-In the `yielded` repository directory, run:
+Each merge leaves every other open PR behind. After merging, the maintainer catches them up with the [`rebase-prs`](.claude/skills/rebase-prs/SKILL.md) Claude Code skill, or its script from the repository root:
 
 ```bash
-npm run link
+node .claude/skills/rebase-prs/rebase-prs.mts
 ```
 
-This runs `npm run build` (which removes the existing `dist`, recompiles JavaScript with `tsup`, and emits TypeScript declarations with `tsc`) and then registers the package globally via `npm link`.
+It rebases each open, ready PR into `dev` that has fallen behind and doesn't conflict, the same as "Update with rebase". It skips drafts, PRs from forks and the release PR, comments once on a PR that conflicts, and asks Dependabot to rebase its own PRs. Add `main` for PRs into `main`, or `--dry-run` to only print what it would do. Its pushes come from whoever `gh` is signed in as, so CI runs on each rebased PR.
 
-### Step 2 — Link into a consumer project
+## Your email address
 
-In the directory of the project you want to test with, run:
+Everything you push stays public, including your commits' author and committer addresses. Commit with your [GitHub noreply address](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address), and turn on "Keep my email addresses private" and "Block command line pushes that expose my email" in your [email settings](https://github.com/settings/emails).
 
-```bash
-npm link @jenbuska/yielded
-```
+## Reporting a security vulnerability
 
-This replaces the installed copy with a symlink to your local build. You can now import from `@jenbuska/yielded` and see your local changes immediately after each `npm run build`.
+Don't open a public issue or pull request about a vulnerability. Report it privately with the [Report a vulnerability](https://github.com/jEnbuska/yielded/security/advisories/new) form. [`SECURITY.md`](SECURITY.md) says what to include and what happens next.
 
-### Step 3 — Verify the integration
+## Hotfixes
 
-Write or run whatever tests exist in the consumer project. Typical things to check:
+A hotfix is a `hotfix/*` branch into `dev` that doesn't need an issue. It's released like everything else, through `dev`. Only branches in this repository count, because a fork can name a branch anything, so a fix from a fork links an issue.
 
-- TypeScript types resolve correctly (run `tsc --noEmit` in the consumer)
-- Runtime behavior matches expectations
-- Tree-shaking / bundling works as expected with your build toolchain
+## Dependabot
 
-### Step 4 — Clean up
+Dependabot keeps the GitHub Actions in the workflows up to date and does nothing else. [`.github/dependabot.yml`](.github/dependabot.yml) checks `dev` weekly and opens one PR into `dev` with every action that has a release at least a week old. Every action is pinned to a commit SHA, with its version in a comment, and Dependabot updates both.
 
-Once you are done, remove the link from the consumer project and restore the published version:
+- Its PRs don't link an issue: `PR rules` lets a PR through without one when Dependabot opened it from a `dependabot/*` branch.
+- To update one, comment `@dependabot rebase` rather than rebasing it yourself: once someone else pushes to its branch, Dependabot stops updating it.
+- It doesn't update or audit the npm dependencies. `pnpm audit` in CI and the weekly [`audit.yml`](.github/workflows/audit.yml) check them, and they're updated by hand, in a PR that links an issue.
 
-```bash
-# In the consumer project
-npm unlink @jenbuska/yielded
-npm install
+## Releases
 
-# In the yielded repo (remove the global link)
-npm unlink
-```
+Only the maintainer releases. A release publishes `dev`'s current commit to npm as the version in `package.json`.
 
-## Example Projects
+1. In a PR into `dev`, set the new version in `package.json` and move the `## [Unreleased]` entries in `CHANGELOG.md` under a heading for it, following [Semantic Versioning](https://semver.org/).
+2. Open the release PR from `dev` into `main`, titled `Release <version>`:
 
-Two self-contained example projects live in `examples/`. Both reference the local package via `"@jenbuska/yielded": "file:../../"` so they work with or without `npm link`.
-
-### `examples/node-ts` — Barebones Node TypeScript
-
-Verifies that the package works in a plain Node.js environment. Runs sync and async pipelines and prints the results.
-
-```bash
-cd examples/node-ts
-npm install
-npm run build   # tsc compile
-npm start       # node dist/index.js
-```
-
-### `examples/react-vite` — Vite + React + TypeScript
-
-A minimal React app with a counter button. Each click uses Yielded internally to derive the new state. Includes a **Playwright browser test suite** that tests against Chromium, Firefox, WebKit (Safari), and Edge.
-
-```bash
-cd examples/react-vite
-npm install
-npm run build   # type-check + vite build
-npm test        # build + install Playwright browsers + run tests (Chromium, Firefox, WebKit, Edge)
-npm run dev     # start dev server
-```
-
-> **Note:** `npm test` automatically downloads the required Playwright-managed browsers the first time it runs via `npm run install:browsers`. On subsequent runs, Playwright skips the download if the browsers are already cached — so there is no overhead after the first install. **Edge** is not downloaded by this script; its tests run only when Microsoft Edge is installed on the system, and are skipped otherwise.
-
-#### Playwright tests
-
-The tests live in `examples/react-vite/tests/app.spec.ts`. Playwright's `webServer` option starts `vite preview` automatically before the tests and shuts it down afterwards — no manual server management needed. For each browser the tests check:
-
-- The app loads and shows an initial count of `0`
-- Clicking the **Increment** button updates the count to `1`
-- Three clicks update the count to `3` and the items list shows the correct doubled values `[2, 4, 6]`
-
-Browsers tested:
-
-| Project | Engine | Equivalent to |
-|---------|--------|---------------|
-| Chromium | Blink | Chrome |
-| Firefox | Gecko | Firefox |
-| WebKit (Safari) | WebKit | Safari |
-| Edge | Blink | Microsoft Edge (system-installed; tests run only if Edge is present) |
-
-To run the example tests from the repository root (browsers are installed automatically):
-
-```bash
-npm run test:examples
-```
-
-## Beta / Pre-release Process
-
-Beta releases allow users to test upcoming features before a final release. They are published to npm under the `beta` dist-tag so that a plain `npm install @jenbuska/yielded` **never** installs a beta version.
-
-### Publishing a Beta
-
-1. **Set the pre-release version** in `package.json`:
    ```bash
-   # First beta for an upcoming release
-   npm version X.Y.Z-beta.0 --no-git-tag-version
-
-   # Increment beta counter for subsequent fixes
-   npm version X.Y.Z-beta.1 --no-git-tag-version
+   gh pr create --base main --head dev --title "Release <version>"
    ```
 
-2. **Run all checks**:
-   ```bash
-   npm run check-all
-   ```
+3. When every check has passed on it, the full dependency audit included, publish from **Actions → Release → Run workflow**, with `dev` under "Use workflow from". Only the repository owner can run it. It checks the release PR, fast-forwards `main` to that exact commit, publishes it to npm with provenance and tags it `v<version>`.
 
-3. **Publish with the `beta` tag**:
-   ```bash
-   npm run publish:beta
-   ```
-   This runs `npm publish --tag beta --access public`. The `prepublishOnly` hook builds the package automatically before publishing.
+The Release workflow is tracked in [#34](https://github.com/jEnbuska/yielded/issues/34). Until it's in place, release by hand: fast-forward `main` with `git push origin origin/dev:refs/heads/main` (GitHub accepts it because the release PR has that exact commit with passing checks, and marks the PR as merged), then publish from an up-to-date `main` with `pnpm publish --access public`, or `pnpm publish:beta` for a pre-release under the `beta` tag.
 
-4. **Verify the tag on npm**:
-   ```bash
-   npm dist-tag ls @jenbuska/yielded
-   # Expected output:
-   #   beta: X.Y.Z-beta.0
-   #   latest: X.Y.(Z-1)   ← last stable release, unchanged
-   ```
-   The `latest` tag must still point to the last stable release — do **not** pass `--tag latest` during a beta publish.
+### Never press the merge button on a release PR
 
-5. **Commit and push** the version bump:
-   ```bash
-   git add package.json package-lock.json CHANGELOG.md
-   git commit -m "chore: X.Y.Z-beta.0"
-   git push
-   ```
+"Rebase and merge" always creates new commit hashes, so `main` would have commits that `dev` doesn't, and the next release PR would be behind `main`. With a fast-forward, `main` and `dev` are the same commit.
 
-### Installing a Beta
+## Where the rules are enforced
 
-Users can opt in to a beta version explicitly. A plain install will never pick up a beta release.
+| Rule                                     | Defined in                                                                                             | Enforced by                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| PRs only, no force-push or deletion      | The `dev` and `main` rulesets, under repository settings                                               | GitHub, with no bypass for admins        |
+| Checks pass, branch up to date           | The same rulesets, as required checks and code scanning rule                                           | GitHub, with no bypass for admins        |
+| Rebase only, no merge commits            | Repository merge settings and the same rulesets                                                        | GitHub                                   |
+| Allowed source, open issue, no empty PRs | [`pr-rules.yml`](.github/workflows/pr-rules.yml)                                                       | GitHub, as the required `PR rules` check |
+| Only the maintainer merges               | The repository's collaborators: the maintainer is the only one                                         | GitHub, as nobody else has write access  |
+| Only the owner publishes                 | The Release workflow ([#34](https://github.com/jEnbuska/yielded/issues/34)) and npm trusted publishing | The workflow's owner check and npm       |
 
-```bash
-# Install the latest beta
-npm install @jenbuska/yielded@beta
-
-# Install a specific beta version
-npm install @jenbuska/yielded@X.Y.Z-beta.0
-
-# Check which version you have installed
-npm ls @jenbuska/yielded
-```
-
-To go back to the latest stable release:
-```bash
-npm install @jenbuska/yielded@latest
-```
-
-### Promoting a Beta to Stable
-
-Once the beta has been validated, promote it to stable by:
-
-1. Remove the pre-release suffix from the version (`X.Y.Z-beta.0` → `X.Y.Z`):
-   ```bash
-   npm version X.Y.Z --no-git-tag-version
-   ```
-2. Follow the standard [Release Process](#release-process) steps.
-3. After publishing stable, move the `beta` dist-tag forward (optional):
-   ```bash
-   npm dist-tag add @jenbuska/yielded@X.Y.Z beta
-   ```
-
----
-
-## Release Process
-
-Releases are managed by project maintainers. Since `main` and `release/*` branches are protected and require PRs, follow this workflow:
-
-### Prerequisites
-
-1. Ensure you have npm publish permissions for the `@jenbuska/yielded` package
-2. Authenticate with npm:
-   ```bash
-   npm login
-   ```
-
-### Publishing Steps
-
-1. **Create a release branch** from main:
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b release/vX.Y.Z
-   ```
-
-2. **Ensure all tests pass**:
-   ```bash
-   npm run lint
-   npm run prettier
-   npm run validate
-   npm test
-   npm run build
-   ```
-
-3. **Update version in `package.json`**:
-   ```bash
-   # For patch releases (bug fixes)
-   npm version patch --no-git-tag-version
-   
-   # For minor releases (new features, backward compatible)
-   npm version minor --no-git-tag-version
-   
-   # For major releases (breaking changes)
-   npm version major --no-git-tag-version
-   ```
-   Note: We use `--no-git-tag-version` to prevent automatic tagging; tags are created after merge.
-
-4. **Update CHANGELOG.md** with release notes describing changes
-
-5. **Commit version bump and changelog**:
-   ```bash
-   git add package.json package-lock.json CHANGELOG.md
-   git commit -m "Release vX.Y.Z"
-   git push origin release/vX.Y.Z
-   ```
-
-6. **Create a Pull Request**:
-   - Go to https://github.com/jEnbuska/yielded/pulls
-   - Create PR from `release/vX.Y.Z` to `main`
-   - Title: "Release vX.Y.Z"
-   - Description: Include CHANGELOG content for this release
-   - Get approval and merge the PR
-
-7. **After PR is merged, create git tag and publish**:
-   ```bash
-   git checkout main
-   git pull origin main
-   git tag vX.Y.Z
-   git push origin refs/tags/vX.Y.Z
-   
-   # Publish to npm as a public scoped package
-   npm publish --access public
-   ```
-   Note: The `prepublishOnly` script will automatically build the package before publishing.
-
-8. **Create GitHub release**:
-   - Go to https://github.com/jEnbuska/yielded/releases/new
-   - Select tag `vX.Y.Z`
-   - Title: "vX.Y.Z"
-   - Description: Include CHANGELOG content
-   - Publish release
-
-9. **Clean up** (optional):
-   ```bash
-   git branch -d release/vX.Y.Z
-   git push origin --delete release/vX.Y.Z
-   ```
-
-### What Gets Published
-
-The npm package includes:
-- `dist/` - Compiled JavaScript and TypeScript definitions
-- `README.md` - Package documentation
-- `LICENSE` - MIT License
-- `package.json` - Package metadata
-
-Source files, tests, and development configurations are excluded (see `.npmignore`).
-
-## Questions?
-
-If you have questions or need help:
-
-- Open an issue on GitHub
-- Check existing issues and discussions
-- Review the README.md for API documentation
-
-## Recognition
-
-Contributors will be recognized in the project's README and release notes.
-
-Thank you for contributing to Yielded! 🎉
+`PR rules` uses `pull_request_target`, so its code comes from `dev` and a PR can't change the check that judges it. It reads the PR's details and never runs the PR's code.

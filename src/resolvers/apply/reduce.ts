@@ -128,7 +128,7 @@ export async function reduceAsync(
   }
   let index = 0;
   for await (const next of generator) {
-    acc = acc.then((acc) => reducer(acc, next, index++));
+    acc = acc.then((previous) => reducer(previous, next, index++));
   }
   return acc;
 }
@@ -144,7 +144,7 @@ export function reduceParallel(
   reducer: (acc: unknown, next: unknown, index: number) => unknown,
   ...rest: [unknown] | []
 ): IParallelResolverSubConfig<unknown, unknown> {
-  let acc: unknown | symbol = !!rest.length ? rest[0]! : getEmptySlot();
+  let acc: unknown | symbol = rest.length ? rest[0]! : getEmptySlot();
   let index = 0;
   return {
     name: "reduce",

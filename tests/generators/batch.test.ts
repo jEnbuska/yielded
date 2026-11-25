@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { createTestSets } from "../utils/createTestSets.ts";
-import "../utils/initTestPolyfills.ts";
 
 describe("batch", () => {
   describe("batch without left overs", () => {

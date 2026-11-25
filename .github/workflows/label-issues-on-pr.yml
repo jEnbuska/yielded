@@ -1,0 +1,41 @@
+name: Label linked issues when PR is opened
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  label-issues:
+    name: Add 'PR Opened' label to linked issues
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only this job can write, and only to issues. PRs from forks still get a
+    # read-only token, so labeling is skipped with a warning for them.
+    permissions:
+      issues: write
+
+    steps:
+      # The PR body is untrusted input, so it reaches the script through env,
+      # never through ${{ }} inside `run`.
+      - name: Label referenced issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Issue numbers from Closes #N, Fixes #N and Resolves #N (any case)
+          issues=$(printf '%s\n' "$PR_BODY" | grep -ioP '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#\K\d+' | sort -u)
+
+          if [ -z "$issues" ]; then
+            echo "No linked issues found in PR #$PR_NUMBER body"
+            exit 0
+          fi
+
+          for issue in $issues; do
+            echo "Adding 'PR Opened' label to issue #$issue (linked from PR #$PR_NUMBER)"
+            gh issue edit "$issue" --repo "$GITHUB_REPOSITORY" --add-label "PR Opened" || echo "::warning::Could not label issue #$issue"
+          done

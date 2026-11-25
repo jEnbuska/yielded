@@ -45,7 +45,7 @@ function createIndexFinder<T>(
   };
 }
 
-export function createIndexFinderAsync<T>(
+function createIndexFinderAsync<T>(
   arr: T[],
   comparator: (a: T, b: T) => IMaybeAsync<number> = defaultCompare,
 ) {

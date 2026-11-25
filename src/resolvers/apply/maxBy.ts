@@ -66,13 +66,13 @@ export function handleMaxBySync(
   callback: (next: unknown, index: number) => number,
   rest: unknown[],
 ): unknown {
-  const next = generator.next();
+  const first = generator.next();
   let index = 0;
-  if (next.done) {
+  if (first.done) {
     if (rest.length) return rest[0];
     throw new TypeError(createGeneratorEmptyMsg("Yielded", method));
   }
-  let current = next.value;
+  let current = first.value;
   let currentMax = callback(current, index++);
   for (const next of generator) {
     const value = callback(next, index++);
@@ -107,13 +107,13 @@ export async function handleMaxByAsync(
   callback: (next: unknown, index: number) => IMaybeAsync<number>,
   rest: unknown[],
 ): Promise<unknown> {
-  const next = await generator.next();
-  if (next.done) {
+  const first = await generator.next();
+  if (first.done) {
     if (rest.length) return rest[0];
     throw new TypeError(createGeneratorEmptyMsg("AsyncYielded", method));
   }
   let index = 0;
-  let acc = next.value;
+  let acc = first.value;
   let max = await callback(acc, index++);
   for await (const next of generator) {
     const numb = await callback(next, index++);

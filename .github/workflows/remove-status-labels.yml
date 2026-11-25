@@ -1,0 +1,33 @@
+name: Remove status labels when an issue closes
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  remove-status-labels:
+    name: Remove 'todo' and 'in progress' from the closed issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only this job can write, and only to issues.
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+    # `gh issue edit --remove-label` succeeds if the issue doesn't have the
+    # label, but fails if the label doesn't exist in the repository. One step
+    # per label, each run only for a label the issue has, so neither case can
+    # fail the job, and a real API error still does.
+    steps:
+      - name: Remove 'todo'
+        if: contains(github.event.issue.labels.*.name, 'todo')
+        run: gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label "todo"
+
+      - name: Remove 'in progress'
+        if: contains(github.event.issue.labels.*.name, 'in progress')
+        run: gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label "in progress"
