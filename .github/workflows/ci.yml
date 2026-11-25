@@ -70,16 +70,54 @@ jobs:
     timeout-minutes: 15
     needs: changes
     # Draft PRs often start with an empty commit, so there's nothing to check.
-    # `!cancelled()` runs it even if `changes` fails: its outputs are then
-    # empty, which isn't 'false', so every step runs.
+    # Every other PR runs this job, if only for the secret scan: it's a
+    # required check, so a failing scan blocks the merge. `!cancelled()` runs
+    # it even if `changes` fails: its outputs are then empty, which isn't
+    # 'false', so every step runs.
     if: >-
       !cancelled()
       && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
 
     steps:
+      # The whole history, so the secret scan can read every new commit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      # A pinned release, checked against its checksum from the release's
+      # gitleaks_<version>_checksums.txt.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="$RUNNER_TEMP/gitleaks.tar.gz"
+          curl -fsSL --retry 3 -o "$archive" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "$GITLEAKS_SHA256  $archive" | sha256sum --check --strict -
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks" gitleaks
+          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+
+      # Every commit the PR or push adds, docs included, with gitleaks'
+      # default rules. A PR checks out its merge commit: HEAD^1 is the base
+      # and HEAD^2 the PR's head. A push scans from the commit before it, or
+      # everything for a new branch or a manual run. `--redact` keeps a found
+      # secret out of the public log.
+      - name: Scan the new commits for secrets
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            range='HEAD^1..HEAD^2'
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ]; then
+            range=HEAD
+          else
+            range="$BEFORE..HEAD"
+          fi
+          echo "Scanning $range"
+          gitleaks git --log-opts="$range" --redact --verbose --no-banner .
 
       # Reads the pnpm version from `packageManager` in package.json. It has
       # to run before setup-node, whose pnpm cache needs pnpm on the PATH.
