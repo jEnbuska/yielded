@@ -1,9 +1,8 @@
-.idea
-dist
 node_modules
-.DS_Store
-*.js
-!eslint.config.js
-!tsup.config.ts
-
+dist
 coverage
+.idea
+.vscode/*
+.DS_Store
+*.log
+*.tgz

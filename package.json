@@ -40,21 +40,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown",
-    "prepublishOnly": "pnpm run build",
-    "publish:beta": "pnpm publish --tag beta --access public",
-    "test": "vitest run && USE_POLYFILLS=true vitest run",
-    "test:watch": "vitest",
-    "test:examples": "pnpm run test:example:node && pnpm run test:example:react",
-    "test:example:node": "pnpm run build && pnpm --filter node-ts-example run build",
-    "test:example:react": "pnpm run build && pnpm --filter react-vite-example test",
+    "typecheck": "tsc --noEmit",
     "lint": "oxlint",
-    "check-all": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run test:examples",
-    "test:coverage": "vitest run --coverage",
+    "knip": "knip --reporter symbols --reporter ./scripts/knip-explain.mts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "typecheck": "tsc --noEmit",
-    "knip": "knip --reporter symbols --reporter ./scripts/knip-explain.mts"
+    "test": "vitest run && USE_POLYFILLS=true vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "build": "tsdown",
+    "test:examples": "pnpm build && pnpm --filter \"./examples/*\" test",
+    "publish:beta": "pnpm publish --tag beta --access public",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.5",
