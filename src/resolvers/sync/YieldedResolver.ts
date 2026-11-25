@@ -51,11 +51,12 @@ export class YieldedResolver<T>
   }
 
   return(): IteratorResult<T, void | undefined> {
-    return this.generator.return?.()!;
+    return this.generator.return?.() ?? { done: true, value: undefined };
   }
 
   throw(e: any): IteratorResult<T, void | undefined> {
-    return this.generator.throw?.(e)!;
+    if (!this.generator.throw) throw e;
+    return this.generator.throw(e);
   }
 
   #apply<TArgs extends any[], TReturn>(

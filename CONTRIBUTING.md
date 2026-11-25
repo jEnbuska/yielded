@@ -80,6 +80,7 @@ git checkout -b fix/your-bug-fix
 ```
 
 Use descriptive branch names:
+
 - `feature/` for new features
 - `fix/` for bug fixes
 - `docs/` for documentation changes
@@ -99,7 +100,7 @@ Use descriptive branch names:
 
 ### Example Code Structure
 
-```typescript
+````typescript
 export interface IYieldedOperation<T, TFlow extends IYieldedFlow> {
   /**
    * Brief description of what this operation does.
@@ -116,7 +117,7 @@ export interface IYieldedOperation<T, TFlow extends IYieldedFlow> {
    */
   operation(param: Type): INextYielded<TOut, TFlow>;
 }
-```
+````
 
 ## Testing
 
@@ -153,15 +154,17 @@ When adding features that handle large datasets, include stress tests in `tests/
 ```typescript
 test("should handle large dataset", () => {
   const size = 100_000;
-  const result = Yielded.from(function* () {
-    for (let i = 0; i < size; i++) {
-      yield i;
-    }
-  }())
+  const result = Yielded.from(
+    (function* () {
+      for (let i = 0; i < size; i++) {
+        yield i;
+      }
+    })(),
+  )
     .operation()
     .take(10)
     .toArray();
-  
+
   expect(result).toHaveLength(10);
 });
 ```
@@ -204,12 +207,14 @@ npm run validate
 ### Before Submitting
 
 1. **Sync with upstream**:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Run all checks**:
+
    ```bash
    npm run lint
    npm run prettier
@@ -233,6 +238,7 @@ Write clear and meaningful commit messages:
 - Reference issue numbers when applicable
 
 Examples:
+
 ```
 Add parallel processing support for flatMap
 
@@ -245,6 +251,7 @@ Fixes #123
 ### Creating a Pull Request
 
 1. **Push your branch**:
+
    ```bash
    git push origin your-branch-name
    ```
@@ -386,12 +393,12 @@ The tests live in `examples/react-vite/tests/app.spec.ts`. Playwright's `webServ
 
 Browsers tested:
 
-| Project | Engine | Equivalent to |
-|---------|--------|---------------|
-| Chromium | Blink | Chrome |
-| Firefox | Gecko | Firefox |
-| WebKit (Safari) | WebKit | Safari |
-| Edge | Blink | Microsoft Edge (system-installed; tests run only if Edge is present) |
+| Project         | Engine | Equivalent to                                                        |
+| --------------- | ------ | -------------------------------------------------------------------- |
+| Chromium        | Blink  | Chrome                                                               |
+| Firefox         | Gecko  | Firefox                                                              |
+| WebKit (Safari) | WebKit | Safari                                                               |
+| Edge            | Blink  | Microsoft Edge (system-installed; tests run only if Edge is present) |
 
 To run the example tests from the repository root (browsers are installed automatically):
 
@@ -406,6 +413,7 @@ Beta releases allow users to test upcoming features before a final release. They
 ### Publishing a Beta
 
 1. **Set the pre-release version** in `package.json`:
+
    ```bash
    # First beta for an upcoming release
    npm version X.Y.Z-beta.0 --no-git-tag-version
@@ -415,23 +423,28 @@ Beta releases allow users to test upcoming features before a final release. They
    ```
 
 2. **Run all checks**:
+
    ```bash
    npm run check-all
    ```
 
 3. **Publish with the `beta` tag**:
+
    ```bash
    npm run publish:beta
    ```
+
    This runs `npm publish --tag beta --access public`. The `prepublishOnly` hook builds the package automatically before publishing.
 
 4. **Verify the tag on npm**:
+
    ```bash
    npm dist-tag ls @jenbuska/yielded
    # Expected output:
    #   beta: X.Y.Z-beta.0
    #   latest: X.Y.(Z-1)   ← last stable release, unchanged
    ```
+
    The `latest` tag must still point to the last stable release — do **not** pass `--tag latest` during a beta publish.
 
 5. **Commit and push** the version bump:
@@ -457,6 +470,7 @@ npm ls @jenbuska/yielded
 ```
 
 To go back to the latest stable release:
+
 ```bash
 npm install @jenbuska/yielded@latest
 ```
@@ -492,6 +506,7 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
 ### Publishing Steps
 
 1. **Create a release branch** from main:
+
    ```bash
    git checkout main
    git pull origin main
@@ -499,6 +514,7 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
    ```
 
 2. **Ensure all tests pass**:
+
    ```bash
    npm run lint
    npm run prettier
@@ -508,21 +524,24 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
    ```
 
 3. **Update version in `package.json`**:
+
    ```bash
    # For patch releases (bug fixes)
    npm version patch --no-git-tag-version
-   
+
    # For minor releases (new features, backward compatible)
    npm version minor --no-git-tag-version
-   
+
    # For major releases (breaking changes)
    npm version major --no-git-tag-version
    ```
+
    Note: We use `--no-git-tag-version` to prevent automatic tagging; tags are created after merge.
 
 4. **Update CHANGELOG.md** with release notes describing changes
 
 5. **Commit version bump and changelog**:
+
    ```bash
    git add package.json package-lock.json CHANGELOG.md
    git commit -m "Release vX.Y.Z"
@@ -537,15 +556,17 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
    - Get approval and merge the PR
 
 7. **After PR is merged, create git tag and publish**:
+
    ```bash
    git checkout main
    git pull origin main
    git tag vX.Y.Z
    git push origin refs/tags/vX.Y.Z
-   
+
    # Publish to npm as a public scoped package
    npm publish --access public
    ```
+
    Note: The `prepublishOnly` script will automatically build the package before publishing.
 
 8. **Create GitHub release**:
@@ -564,6 +585,7 @@ Releases are managed by project maintainers. Since `main` and `release/*` branch
 ### What Gets Published
 
 The npm package includes:
+
 - `dist/` - Compiled JavaScript and TypeScript definitions
 - `README.md` - Package documentation
 - `LICENSE` - MIT License

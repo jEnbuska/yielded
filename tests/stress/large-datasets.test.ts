@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
-import "../utils/initTestPolyfills.ts";
 import {
   createRandomAsyncFlattableData,
   createRandomSyncFlattableData,

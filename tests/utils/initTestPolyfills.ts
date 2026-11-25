@@ -1,7 +1,8 @@
-import { Yielded } from "../../src";
+import { Yielded } from "../../src/index.ts";
 
-if (process && process.env.USE_POLYFILLS === "true") {
-  // Set the flag to force the use of polyfill implementations for all operators
-  // This can be useful for testing the correctness and performance of the polyfill versions in environments that support native implementations.
+// `pnpm test` runs the suite twice: once with the native Iterator helpers
+// where the runtime has them, and once with USE_POLYFILLS=true, which forces
+// the library's own implementations of every operator.
+if (process.env.USE_POLYFILLS === "true") {
   Yielded.__USE_POLYFILL_ONLY__ = true;
 }

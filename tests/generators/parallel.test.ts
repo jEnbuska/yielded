@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { delay } from "../utils/delay.ts";
-import "../utils/initTestPolyfills.ts";
 
 describe("parallel", () => {
   test("Parallel 2, 0 values", async () => {

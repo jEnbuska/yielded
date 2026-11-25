@@ -20,11 +20,9 @@ export type IYieldedIterableSource<
   T,
   TFlow extends IYieldedFlow,
 > = TFlow extends "sync"
-  ?
-      | Iterable<T, void | undefined, void | undefined>
-      | Iterator<T, undefined | void, undefined | void>
-  :
-      | Iterable<IMaybeAsync<T>, undefined | void, undefined | void>
-      | Iterator<IMaybeAsync<T>, undefined | void, undefined | void>
-      | AsyncIterable<IMaybeAsync<T>, void | undefined, void | undefined>
-      | AsyncIterator<IMaybeAsync<T>, void | undefined, void | undefined>;
+  ? | Iterable<T, void | undefined, void | undefined>
+    | Iterator<T, undefined | void, undefined | void>
+  : | Iterable<IMaybeAsync<T>, undefined | void, undefined | void>
+    | Iterator<IMaybeAsync<T>, undefined | void, undefined | void>
+    | AsyncIterable<IMaybeAsync<T>, void | undefined, void | undefined>
+    | AsyncIterator<IMaybeAsync<T>, void | undefined, void | undefined>;

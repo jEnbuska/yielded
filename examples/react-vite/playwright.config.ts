@@ -5,7 +5,8 @@ export default defineConfig({
   timeout: 30_000,
   retries: 0,
   workers: 1,
-  reporter: "list",
+  // CI uploads the HTML report when a test fails
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
 
   use: {
     baseURL: "http://localhost:4173",
@@ -14,30 +15,17 @@ export default defineConfig({
 
   // Start the Vite preview server before running tests and shut it down after.
   webServer: {
-    command: "npx vite preview --port 4173 --strictPort",
+    command: "pnpm exec vite preview --port 4173 --strictPort",
     url: "http://localhost:4173",
     reuseExistingServer: false,
     timeout: 15_000,
   },
 
+  // CI runs one project per job, in Playwright's container image (see
+  // .github/workflows/ci.yml), named like the job's `browser` matrix value.
   projects: [
-    {
-      name: "Chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-    {
-      name: "Firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    {
-      name: "WebKit (Safari)",
-      use: { ...devices["Desktop Safari"] },
-    },
-    {
-      // Requires Microsoft Edge to be installed on the system.
-      // Tests for this project are skipped automatically if Edge is not found.
-      name: "Edge",
-      use: { ...devices["Desktop Edge"], channel: "msedge" },
-    },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
 });
