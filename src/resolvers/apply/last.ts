@@ -37,12 +37,12 @@ export function lastSync(
   generator: IYieldedSyncGenerator,
   ...rest: unknown[]
 ): unknown {
-  const next = generator.next();
-  if (next.done) {
+  const first = generator.next();
+  if (first.done) {
     if (rest.length) return rest[0];
     throw new TypeError(createGeneratorEmptyMsg("Yielded", "last"));
   }
-  let last = next.value;
+  let last = first.value;
   for (const next of generator) last = next;
   return last;
 }
@@ -58,12 +58,12 @@ export async function lastAsync(
   generator: IYieldedAsyncGenerator,
   ...rest: unknown[]
 ): Promise<unknown> {
-  const next = await generator.next();
-  if (next.done) {
+  const first = await generator.next();
+  if (first.done) {
     if (rest.length) return rest[0];
     throw new TypeError(createGeneratorEmptyMsg("AsyncYielded", "last"));
   }
-  let last = next.value;
+  let last = first.value;
   for await (const next of generator) last = next;
   return last;
 }
