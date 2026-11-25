@@ -1,205 +1,376 @@
 name: CI
 
 on:
-  # Automatic trigger when PR is opened or updated
   pull_request:
-    types:
-      - opened              # PR is created
-      - ready_for_review    # Draft PR marked as ready
-      - synchronize         # New commits pushed to PR
-      - reopened            # Closed PR is reopened
-    branches:
-      - main
-      - 'release/*'
-  
-  # Automatic trigger when code is pushed to protected branches (after merge)
   push:
-    branches:
-      - main
-      - 'release/*'
-  
-  # Manual trigger from PR UI or Actions tab (backup option)
+    branches: [main, dev]
   workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Reason for running CI checks'
-        required: false
-        default: 'Manual trigger'
+
+permissions:
+  contents: read
+
+# A new push to the same branch or PR cancels the run it makes outdated.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  validate:
-    name: TypeScript Validation
+  # Decides from a PR's changed files which of the jobs below have work to do.
+  # Only PRs skip anything: pushes and manual runs run everything.
+  changes:
+    name: Find the changed files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      checks: ${{ steps.changes.outputs.checks }}
+      format: ${{ steps.changes.outputs.format }}
+      examples: ${{ steps.changes.outputs.examples }}
+      deps: ${{ steps.changes.outputs.deps }}
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # A PR checks out its merge commit, whose first parent is the tip of the
+      # base branch, so two commits are enough to diff against the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
         with:
-          node-version: '20'
-          cache: 'npm'
+          persist-credentials: false
+          fetch-depth: 2
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript validation
-        run: npm run validate
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run build
-        run: npm run build
-
-      - name: Check build output
+      # - checks: everything except docs (Markdown and LICENSE). oxfmt formats
+      #   Markdown, so a Markdown change still runs the format check, alone.
+      # - examples: what the built package or the examples are made from.
+      # - deps: any package.json or the lockfile.
+      # - A change to this workflow runs everything.
+      - name: Decide which jobs run
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ ! -f "dist/index.js" ]; then
-            echo "Error: dist/index.js was not generated"
-            exit 1
+          if [ "$EVENT_NAME" != pull_request ]; then
+            printf 'checks=true\nformat=true\nexamples=true\ndeps=true\n' | tee -a "$GITHUB_OUTPUT"
+            exit 0
           fi
-          if [ ! -f "dist/index.d.ts" ]; then
-            echo "Error: dist/index.d.ts was not generated"
-            exit 1
+          checks=false format=false examples=false deps=false
+          while IFS= read -r file; do
+            echo "Changed: $file"
+            case "$file" in
+              .github/workflows/ci.yml) checks=true format=true examples=true deps=true ;;
+              *.md) format=true ;;
+              LICENSE) ;;
+              *) checks=true format=true ;;
+            esac
+            case "$file" in
+              *.md) ;;
+              src/* | examples/* | package.json | pnpm-lock.yaml | pnpm-workspace.yaml | tsconfig.json | tsdown.config.ts | .nvmrc) examples=true ;;
+            esac
+            case "$file" in
+              package.json | */package.json | pnpm-lock.yaml) deps=true ;;
+            esac
+          done < <(git diff --name-only HEAD^1 HEAD)
+          printf 'checks=%s\nformat=%s\nexamples=%s\ndeps=%s\n' "$checks" "$format" "$examples" "$deps" | tee -a "$GITHUB_OUTPUT"
+
+  checks:
+    name: Lint, format, typecheck, test & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: changes
+    # Draft PRs often start with an empty commit, so there's nothing to check.
+    # Every other PR runs this job, if only for the secret scan: it's a
+    # required check, so a failing scan blocks the merge. `!cancelled()` runs
+    # it even if `changes` fails: its outputs are then empty, which isn't
+    # 'false', so every step runs.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
+
+    steps:
+      # The whole history, so the secret scan can read every new commit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # A pinned release, checked against its checksum from the release's
+      # gitleaks_<version>_checksums.txt.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="$RUNNER_TEMP/gitleaks.tar.gz"
+          curl -fsSL --retry 3 -o "$archive" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "$GITLEAKS_SHA256  $archive" | sha256sum --check --strict -
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks" gitleaks
+          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+
+      # Every commit the PR or push adds, docs included, with gitleaks'
+      # default rules. A PR checks out its merge commit: HEAD^1 is the base
+      # and HEAD^2 the PR's head. A push scans from the commit before it, or
+      # everything for a new branch or a manual run. `--redact` keeps a found
+      # secret out of the public log.
+      - name: Scan the new commits for secrets
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            range='HEAD^1..HEAD^2'
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ]; then
+            range=HEAD
+          else
+            range="$BEFORE..HEAD"
           fi
-          echo "Build output verified successfully"
+          echo "Scanning $range"
+          gitleaks git --log-opts="$range" --redact --verbose --no-banner .
 
-  lint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # Reads the pnpm version from `packageManager` in package.json. It has
+      # to run before setup-node, whose pnpm cache needs pnpm on the PATH.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version-file: .nvmrc
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        if: >-
+          needs.changes.outputs.checks != 'false'
+          || needs.changes.outputs.format != 'false'
+        run: pnpm install --frozen-lockfile
 
-      - name: Run ESLint
-        run: npm run lint
+      # A PR that only changes Markdown runs the format check and nothing else.
+      - name: Lint
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm lint
 
-  prettier:
-    name: Prettier Format Check
+      - name: Find dead code
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm knip
+
+      - name: Format check
+        if: needs.changes.outputs.format != 'false'
+        run: pnpm format:check
+
+      - name: Type check
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm typecheck
+
+      # Runs the suite twice: with the native Iterator helpers and with the
+      # polyfills forced (USE_POLYFILLS=true)
+      - name: Test
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm test
+
+      # tsdown also runs publint and Are The Types Wrong on the built package
+      - name: Build
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm build
+
+      # Checks the dependencies for known vulnerabilities of high severity or
+      # worse with `pnpm audit`. It runs last, and even after an earlier step
+      # fails, so neither hides the other's result.
+      # - A PR into main, or a push to main, audits the whole tree, whatever
+      #   files changed: this job is required in the main ruleset, so a
+      #   finding blocks the release. Fix it in dev first, in its own PR.
+      # - A PR into dev that changes a package.json or the lockfile fails
+      #   only on what it adds, compared with its base (HEAD^1), so an
+      #   advisory for a dependency it didn't touch doesn't fail it: the
+      #   weekly audit (audit.yml) opens an issue for those.
+      # - Other pushes skip it: they can't be blocked, and the weekly audit
+      #   covers them.
+      - name: Check the dependencies for known vulnerabilities
+        if: >-
+          !cancelled()
+          && (github.base_ref == 'main'
+            || github.ref == 'refs/heads/main'
+            || (github.event_name == 'pull_request' && needs.changes.outputs.deps != 'false'))
+        env:
+          WHOLE_TREE: ${{ github.base_ref == 'main' || github.ref == 'refs/heads/main' }}
+        run: |
+          pnpm audit --audit-level=high --json > "$RUNNER_TEMP/audit.json" || true
+          base=()
+          if [ "$WHOLE_TREE" != true ]; then
+            git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
+            pnpm --dir "$RUNNER_TEMP/base" audit --audit-level=high --json > "$RUNNER_TEMP/base-audit.json" || true
+            base=("$RUNNER_TEMP/base-audit.json")
+          fi
+          status=0
+          node scripts/audit-report.mts "$RUNNER_TEMP/audit.json" "${base[@]}" > "$RUNNER_TEMP/report.md" || status=$?
+          if [ "$status" = 1 ]; then
+            if [ "$WHOLE_TREE" = true ]; then
+              heading='Known vulnerabilities in the dependencies'
+              message='The dependencies have known vulnerabilities of high severity or worse, listed above and in the job summary. Fix them in dev first, in a PR of their own, then update this branch.'
+            else
+              heading='Known vulnerabilities this PR adds'
+              message='This PR adds dependencies with known vulnerabilities of high severity or worse. Update each one to its fixed version, listed above and in the job summary.'
+            fi
+            cat "$RUNNER_TEMP/report.md"
+            { echo "## $heading"; echo; cat "$RUNNER_TEMP/report.md"; } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::$message"
+          fi
+          exit "$status"
+
+  # The built package, run by examples/node-ts on every Node.js version the
+  # library supports: `engines` in package.json says >=20.4.0, which has no
+  # native Iterator helpers, so the polyfills run there. The tooling needs
+  # the Node.js in .nvmrc, so the example is built with that and only run
+  # with the matrix version.
+  node-example:
+    name: Node example (${{ matrix.node }})
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prettier check
-        run: npm run prettier
-
-  test:
-    name: Test Suite
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test
-
-  test-example-node:
-    name: Node TypeScript Example (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
+    timeout-minutes: 10
+    needs: changes
+    # Skipping a matrix job would report one check under its unexpanded name,
+    # and the required `Node example (20.4.0)` would wait forever. So the
+    # matrix always runs, and its steps skip when nothing it checks changed.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
     strategy:
-      matrix:
-        node-version: ['20', '22', '24']
       fail-fast: false
+      matrix:
+        node: ["20.4.0", "22", "24"]
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Skip, as nothing the example checks has changed
+        if: needs.changes.outputs.examples == 'false'
+        run: echo "Nothing to test."
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.changes.outputs.examples != 'false'
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          persist-credentials: false
 
-      - name: Install root dependencies and build library
-        run: npm ci && npm run build
+      - name: Set up pnpm
+        if: needs.changes.outputs.examples != 'false'
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - name: Install example dependencies
+      - name: Set up Node.js for the tooling
+        if: needs.changes.outputs.examples != 'false'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        if: needs.changes.outputs.examples != 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the library and the example
+        if: needs.changes.outputs.examples != 'false'
+        run: |
+          pnpm build
+          pnpm --filter node-ts-example build
+
+      - name: Set up Node.js ${{ matrix.node }}
+        if: needs.changes.outputs.examples != 'false'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run the example
+        if: needs.changes.outputs.examples != 'false'
         working-directory: examples/node-ts
-        run: npm ci
+        run: |
+          node --version
+          node dist/index.js
 
-      - name: Build Node TypeScript example
-        working-directory: examples/node-ts
-        run: npm run build
-
-  test-example-react:
-    name: React Vite Example (Playwright)
+  # The built package in a browser app (examples/react-vite), one job per
+  # browser engine, WebKit standing in for Safari.
+  browser-example:
+    name: Browser example (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
+    timeout-minutes: 20
+    needs: changes
+    # Always runs the matrix, for the reason given on node-example.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    # Playwright's image already has every browser and the system packages
+    # they need, so nothing runs apt, which hangs when Ubuntu's mirror is
+    # unreachable. Its version must match `@playwright/test` in
+    # pnpm-lock.yaml; the "Check the image's browsers" step fails if it
+    # doesn't. It runs as root, which Playwright's own CI setup does too.
+    # `--ipc=host` keeps Chromium from running out of shared memory.
+    container:
+      image: mcr.microsoft.com/playwright@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579 # v1.65.1-noble
+      options: --ipc=host
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Skip, as nothing the example checks has changed
+        if: needs.changes.outputs.examples == 'false'
+        run: echo "Nothing to test."
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.changes.outputs.examples != 'false'
         with:
-          node-version: '20'
-          cache: 'npm'
+          persist-credentials: false
 
-      - name: Install root dependencies and build library
-        run: npm ci && npm run build
+      - name: Set up pnpm
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 3
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - name: Install example dependencies
-        working-directory: examples/react-vite
-        run: npm ci
+      # The image comes with its own Node.js, which isn't the one in .nvmrc
+      - name: Set up Node.js
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 3
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
 
-      - name: Install Playwright browsers
-        working-directory: examples/react-vite
-        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Install dependencies
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile
 
-      - name: Build and run Playwright tests
-        working-directory: examples/react-vite
-        run: npm test -- --project=Chromium --project=Firefox --project="WebKit (Safari)"
+      # Each Playwright version needs its own browser builds. A dry run lists
+      # where the installed Playwright looks for them, without downloading.
+      - name: Check the image's browsers
+        if: needs.changes.outputs.examples != 'false'
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          version=$(pnpm --filter react-vite-example exec playwright --version | cut -d ' ' -f 2)
+          dirs=$(pnpm --filter react-vite-example exec playwright install --dry-run "$BROWSER" | sed -n 's/^ *Install location: *//p')
+          if [ -z "$dirs" ]; then
+            echo "::error::playwright install --dry-run listed no browsers."
+            exit 1
+          fi
+          missing=0
+          for dir in $dirs; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::The Playwright image has no $dir, which Playwright $version needs. Update the image in ci.yml to the version of @playwright/test in pnpm-lock.yaml."
+              missing=1
+            fi
+          done
+          exit "$missing"
 
-      - name: Upload Playwright report on failure
-        uses: actions/upload-artifact@v4
+      - name: Build the library
+        if: needs.changes.outputs.examples != 'false'
+        run: pnpm build
+
+      # Firefox refuses to run as root when HOME belongs to another user, and
+      # GitHub sets HOME to /github/home, which the runner's user owns.
+      - name: Run the browser tests
+        if: needs.changes.outputs.examples != 'false'
+        env:
+          HOME: /root
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm --filter react-vite-example test --project="$BROWSER"
+
+      - name: Upload the report
         if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
-          path: examples/react-vite/playwright-report/
+          name: playwright-report-${{ matrix.browser }}
+          path: examples/react-vite/playwright-report
           retention-days: 7

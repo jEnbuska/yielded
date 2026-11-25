@@ -1,0 +1,122 @@
+# Checks every dependency in pnpm-lock.yaml for known vulnerabilities of high
+# severity or worse, weekly and on demand. A new advisory can appear for a
+# dependency no PR touched, and CI's dependency check only looks at what a PR
+# changes. A finding opens an issue, or updates the one already open, instead
+# of failing unrelated PRs. When nothing is found, it does nothing: the PR that
+# fixes a finding closes its issue.
+name: Dependency audit
+
+on:
+  schedule:
+    # Mondays at 05:17 UTC, off the hour when GitHub's scheduler is busiest
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two runs at once could both open an issue.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  # Installs and audits with a read-only token, so no dependency's code runs
+  # next to the token that can write issues.
+  audit:
+    name: Audit the dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      found: ${{ steps.audit.outputs.found }}
+      report: ${{ steps.audit.outputs.report }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Reads the pnpm version from `packageManager` in package.json. It has
+      # to run before setup-node, whose pnpm cache needs pnpm on the PATH.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # pnpm audit exits non-zero on a finding, so its exit code is ignored
+      # and audit-report.mts reads the result. It exits 1 on a finding and 2
+      # when the audit didn't run, which fails this job.
+      - name: Audit
+        id: audit
+        run: |
+          pnpm audit --audit-level=high --json > "$RUNNER_TEMP/audit.json" || true
+          status=0
+          node scripts/audit-report.mts "$RUNNER_TEMP/audit.json" > "$RUNNER_TEMP/report.md" || status=$?
+          if [ "$status" = 0 ]; then
+            echo "No known vulnerabilities of high severity or worse."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$status" != 1 ]; then
+            exit "$status"
+          fi
+          cat "$RUNNER_TEMP/report.md"
+          { echo '## Known vulnerabilities'; echo; cat "$RUNNER_TEMP/report.md"; } >> "$GITHUB_STEP_SUMMARY"
+          # A random delimiter, so no advisory text can end the value early
+          delimiter="REPORT_$(openssl rand -hex 16)"
+          {
+            echo "found=true"
+            echo "report<<$delimiter"
+            cat "$RUNNER_TEMP/report.md"
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
+  # Opens one issue for the findings, or updates the open one. It runs no
+  # code from the repository, so it needs no checkout.
+  issue:
+    name: Open or update the audit issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: audit
+    if: needs.audit.outputs.found == 'true'
+    permissions:
+      issues: write
+
+    steps:
+      # The report is advisory text, so it reaches the script through env,
+      # never through ${{ }} inside `run`. Only an issue this workflow opened
+      # counts as the open one, found by its exact title.
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REPORT: ${{ needs.audit.outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title='Dependency audit: known vulnerabilities of high severity or worse'
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "The [dependency audit]($RUN_URL) on $(date -u +%F) found these known vulnerabilities in \`pnpm-lock.yaml\`:"
+            echo
+            printf '%s\n' "$REPORT"
+            echo
+            echo "Update each package to its fixed version in a PR of its own that closes this issue, not in an unrelated PR. While this issue is open, each audit with a finding updates it instead of opening another."
+          } > "$body"
+          # `--author` would go through the search API, whose index lags, so
+          # a second run right after the first wouldn't find the new issue.
+          # The label filter lists issues directly.
+          number=$(gh issue list --state open --label bug --limit 200 --json number,title,author |
+            jq -r --arg title "$title" 'map(select(.title == $title and .author.login == "app/github-actions")) | first | .number // empty')
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file "$body"
+            echo "Updated issue #$number"
+          else
+            gh issue create --title "$title" --label bug --label todo --body-file "$body"
+          fi
