@@ -4,9 +4,10 @@
     // Knip finds src/index.ts, the library's public API, from package.json.
     // Its exports aren't reported; everything else in src/ must be used.
     ".": {
-      // The reporter the `knip` script passes with --reporter, and the audit
-      // report CI and audit.yml run with node
-      "entry": ["scripts/*.mts"],
+      // The reporter the `knip` script passes with --reporter, the audit
+      // report CI and audit.yml run with node, and the rebase-prs skill's
+      // script, which its SKILL.md runs with node
+      "entry": ["scripts/*.mts", ".claude/skills/rebase-prs/rebase-prs.mts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     // Each example is a small consumer of the built package. Knip's Vite,
