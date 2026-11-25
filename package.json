@@ -53,10 +53,10 @@
     "test:example:react": "pnpm run build && pnpm --filter react-vite-example test",
     "lint": "eslint --ext .ts --max-warnings 0 ./src",
     "lint:fix": "eslint --fix --ext .ts ./src",
-    "prettier": "prettier --check ./src ./examples",
-    "prettier:write": "prettier --write ./src ./examples",
-    "check-all": "pnpm run prettier && pnpm run validate && pnpm run lint && pnpm run test && pnpm run test:examples",
-    "test:coverage": "vitest run --coverage"
+    "check-all": "pnpm run format:check && pnpm run validate && pnpm run lint && pnpm run test && pnpm run test:examples",
+    "test:coverage": "vitest run --coverage",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
@@ -69,7 +69,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
-    "prettier": "^3.8.1",
+    "oxfmt": "^0.80.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^5.1.1"

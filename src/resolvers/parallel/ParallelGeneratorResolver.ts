@@ -13,7 +13,8 @@ type OnNext<T, TReturn> = (
 type OnDone<TReturn> = (resolve: ResolveCallback<TReturn>) => unknown;
 
 export type IParallelResolverName =
-  keyof ISharedYieldedResolver<any, "parallel"> | "_test";
+  | keyof ISharedYieldedResolver<any, "parallel">
+  | "_test";
 
 type IParallelResolversArguments<T, TReturn> = {
   generator: IYieldedParallelGenerator<T>;
@@ -30,7 +31,10 @@ export type IParallelResolverSubConfig<T, TReturn> = Pick<
 >;
 
 type ParallelGeneratorResolverState =
-  "running" | "depleted" | "resolved" | "rejected";
+  | "running"
+  | "depleted"
+  | "resolved"
+  | "rejected";
 
 export class ParallelGeneratorResolver<T, TReturn> {
   readonly #parallel: number;

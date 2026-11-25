@@ -37,32 +37,40 @@ npm run validate && npm run lint && npm run prettier && npm run test
 Trigger the CI workflow:
 
 ✅ **Before creating a pull request**
+
 - Ensures all checks pass before opening the PR
 
 ✅ **After significant code changes**
+
 - Run after completing a feature or bug fix
 
 ✅ **Before merging a PR**
+
 - Always verify checks pass before merging
 
 ✅ **After resolving merge conflicts**
+
 - Ensure the merged code still passes all checks
 
 ✅ **When explicitly requested**
+
 - If someone asks for CI results in a PR review
 
 ## ⚠️ Important Notes
 
 ### No Automatic Blocking
+
 - Unlike automatic CI, status checks won't block PRs by default
 - **You are responsible** for running CI and verifying it passes before merging
 - This is a trade-off for cost savings
 
 ### Permission Required
+
 - Only repository collaborators with **write access** can trigger workflows
 - If you can't see the "Run workflow" button, check your permissions
 
 ### Cost Savings
+
 - Manual triggers eliminate costs from:
   - Every push to feature branches
   - Draft PR updates
@@ -73,21 +81,26 @@ Trigger the CI workflow:
 ## 🔧 Best Practices
 
 ### 1. Run Locally First
+
 Always run checks locally before triggering CI:
+
 ```bash
 npm run validate && npm run lint && npm run prettier && npm run test
 ```
 
 ### 2. Fix Issues Before CI
+
 - Fix any failures locally first
 - Only trigger CI when you expect it to pass
 - Saves time and CI minutes
 
 ### 3. Document CI Runs
+
 - Use the "reason" field when triggering
 - Examples: "Pre-merge validation", "Testing hotfix", "Final check"
 
 ### 4. Check Before Merging
+
 - Always look for the green checkmarks
 - Don't merge if any checks failed
 - Re-run if you made changes after the last CI run
@@ -95,36 +108,44 @@ npm run validate && npm run lint && npm run prettier && npm run test
 ## 🆘 Troubleshooting
 
 ### Can't Find "Run Workflow" Button
+
 **Problem:** The button doesn't appear in the Actions tab.
 
 **Solution:**
+
 - Ensure you're logged into GitHub
 - Verify you have write access to the repository
 - Try refreshing the page
 - Check that you selected the "CI" workflow in the left sidebar
 
 ### Workflow Doesn't Start
+
 **Problem:** Clicked "Run workflow" but nothing happens.
 
 **Solution:**
+
 - Check if there are any browser console errors
 - Try a different browser
 - Ensure GitHub Actions are enabled in repository settings
 - Wait a few seconds and refresh the page
 
 ### All Checks Failing
+
 **Problem:** All 4 checks fail when triggered.
 
 **Solution:**
+
 - Run checks locally first: `npm run validate && npm run lint && npm run prettier && npm run test`
 - Fix any issues locally
 - Commit and push the fixes
 - Trigger CI again
 
 ### Can't See Workflow Results
+
 **Problem:** Can't find the workflow run after triggering.
 
 **Solution:**
+
 - Go to Actions tab
 - Look under "All workflows"
 - Sort by "Most recent" at the top

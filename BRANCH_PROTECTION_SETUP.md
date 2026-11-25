@@ -5,12 +5,14 @@ This document provides step-by-step instructions for configuring branch protecti
 ## Overview
 
 The following branches require protection:
+
 - `main` - The primary branch
 - `release/*` - Any branch starting with "release/"
 
 ## Protection Rules Required
 
 All protected branches must:
+
 1. **Require pull requests** - Direct pushes are blocked
 2. **Require approval** - PRs must be approved by @jEnbuska before merging
 3. **Dismiss stale approvals** - If new commits are pushed after approval, re-approval is required
@@ -32,16 +34,16 @@ All protected branches must:
    - In the "Branch name pattern" field, enter: `main`
 
 3. **Configure Protection Settings**
-   
+
    ✅ **Enable these settings:**
-   
+
    - [ ] ☑️ **Require a pull request before merging**
-     - [ ] ☑️ **Require approvals** 
+     - [ ] ☑️ **Require approvals**
        - Set "Required number of approvals before merging" to: **1**
      - [ ] ☑️ **Dismiss stale pull request approvals when new commits are pushed**
        - **CRITICAL:** This ensures re-approval is required after any changes
      - [ ] ☑️ **Require review from Code Owners** (optional, if you set up CODEOWNERS file)
-   
+
    - [ ] ☑️ **Require status checks to pass before merging** - **REQUIRED**
      - **Important:** CI runs automatically after merge, but for PRs you must manually trigger it
      - [ ] ☑️ **Require branches to be up to date before merging** (recommended)
@@ -51,16 +53,16 @@ All protected branches must:
        3. Search for and select all 4: `TypeScript Validation`, `ESLint`, `Prettier Format Check`, `Test Suite`
      - Once enabled, merge button will be disabled until all checks pass
      - You must manually trigger CI from the PR Checks tab before merging
-   
+
    - [ ] ☑️ **Require conversation resolution before merging** (optional but recommended)
-   
+
    - [ ] ☑️ **Do not allow bypassing the above settings**
      - This ensures even repository admins must follow the rules
-   
+
    - [ ] ☑️ **Restrict who can dismiss pull request reviews** (IMPORTANT)
      - Only allow repository administrators
      - This ensures only you can approve PRs
-   
+
    - [ ] ☑️ **Restrict who can push to matching branches** (RECOMMENDED)
      - Leave empty to only allow merges via pull requests
      - This prevents direct pushes even by admins
@@ -96,6 +98,7 @@ All protected branches must:
 After setting up branch protection, verify it works:
 
 1. **Test Direct Push Protection**
+
    ```bash
    # Try to push directly to main (should fail)
    git checkout main
@@ -119,6 +122,7 @@ After setting up branch protection, verify it works:
 ## Current Pull Request
 
 **PR #1** is ready for your review:
+
 - **Title:** Merge 3 cleanup commits from data-pipes repository
 - **From:** `copilot/copy-main-data-pipes`
 - **To:** `main`
@@ -132,13 +136,17 @@ Once branch protection is enabled, this PR will require your approval before it 
 ## Additional Recommendations
 
 ### 1. Enable Required Status Checks (Optional)
+
 If you add CI/CD workflows (GitHub Actions), you can require them to pass:
+
 - Go to branch protection settings
 - Enable "Require status checks to pass before merging"
 - Select which checks must pass (e.g., "build", "test", "lint")
 
 ### 2. Create a CODEOWNERS File (Optional)
+
 Create `.github/CODEOWNERS` to automatically request reviews:
+
 ```
 # Default owner for everything
 * @jEnbuska
@@ -149,7 +157,9 @@ Create `.github/CODEOWNERS` to automatically request reviews:
 ```
 
 ### 3. Set Up Branch Naming Convention
+
 For release branches, consider using:
+
 - `release/v1.0.0`
 - `release/2024-02-10`
 - `release/feature-name`
@@ -161,13 +171,16 @@ All these will be protected by the `release/*` pattern.
 ## Troubleshooting
 
 **Problem:** Cannot enable branch protection (settings grayed out)
+
 - **Solution:** Ensure you have admin permissions on the repository
 
 **Problem:** "Do not allow bypassing" is not available
+
 - **Solution:** This option requires a GitHub Pro, Team, or Enterprise account
 
 **Problem:** Merge button still available without approval
-- **Solution:** 
+
+- **Solution:**
   1. Check that the rule is saved and active
   2. Ensure "Required number of approvals" is set to at least 1
   3. Verify you're not testing as the PR author (authors cannot approve their own PRs)

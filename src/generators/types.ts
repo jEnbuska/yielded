@@ -52,4 +52,5 @@ export interface ISharedYieldedOperations<T, TFlow extends IYieldedFlow>
 }
 
 export type IDisposableParent =
-  (Disposable & (IteratorObject<any> | AsyncGenerator<any>)) | undefined;
+  | (Disposable & (IteratorObject<any> | AsyncGenerator<any>))
+  | undefined;

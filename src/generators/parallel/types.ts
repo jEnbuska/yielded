@@ -35,4 +35,7 @@ export type IParallelGeneratorSubConfig<T, TOut = T> = {
 };
 
 export type IParallelGeneratorName =
-  keyof ISharedYieldedOperations<any, any> | "parallel" | "awaited" | "_test";
+  | keyof ISharedYieldedOperations<any, any>
+  | "parallel"
+  | "awaited"
+  | "_test";

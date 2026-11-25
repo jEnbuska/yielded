@@ -3,6 +3,7 @@
 ## Current Status
 
 ✅ **CI Workflow Configured**
+
 - Hybrid trigger mode: Automatic after merge + Manual for PRs
 - 4 quality checks: TypeScript, ESLint, Prettier, Tests
 - Post-merge verification automatic
@@ -46,6 +47,7 @@
 6. ✅ **CI runs automatically** after merge
 
 **If PR is changed after approval:**
+
 - ⚠️ Approval automatically dismissed
 - ⚠️ Manually trigger CI again
 - ⚠️ All checks must pass again
@@ -54,19 +56,22 @@
 ### How to Trigger CI from a PR:
 
 **Option 1: From PR Checks Tab (Recommended)**
+
 1. Open the Pull Request
 2. Go to **Checks** tab
 3. Find the CI workflow
 4. Click "Run workflow" or "Re-run jobs"
 
 **Option 2: From Actions Tab**
+
 1. Go to Actions → CI → Run workflow
 2. Select PR branch
 3. Click "Run workflow"
 
 ## What This Achieves
 
-✅ **Protected Branches (main & release/*):**
+✅ **Protected Branches (main & release/\*):**
+
 - Cannot push directly - must use PRs
 - Only you can approve PRs
 - Approval dismissed on new commits (automatic re-approval required)
@@ -74,6 +79,7 @@
 - CI runs automatically after merge for verification
 
 ✅ **Quality Assurance:**
+
 - TypeScript Validation
 - ESLint
 - Prettier Format Check
@@ -81,16 +87,19 @@
 - All must pass before merge
 
 ✅ **Security:**
+
 - Only you control PR approvals
 - Only you can trigger CI checks
 - No bypassing the rules (even for admins)
 
 ❌ **What won't work anymore:**
+
 ```bash
 git push origin main  # ← Will be rejected
 ```
 
 ✅ **What will work:**
+
 1. Create a feature branch
 2. Push to feature branch
 3. Open PR to main

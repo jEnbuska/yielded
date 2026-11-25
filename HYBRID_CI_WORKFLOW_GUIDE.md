@@ -3,6 +3,7 @@
 ## Overview
 
 The repository uses a **hybrid CI workflow** that combines automatic and manual triggers:
+
 - ✅ **Automatic** runs after merging to protected branches (post-merge verification)
 - ✅ **Manual** runs for pull request validation (pre-merge verification)
 
@@ -73,6 +74,7 @@ When code is merged to protected branches:
 ## Step-by-Step PR Workflow
 
 ### Step 1: Create Your Branch and Push
+
 ```bash
 git checkout -b feature/my-feature
 # Make your changes
@@ -81,6 +83,7 @@ git push origin feature/my-feature
 ```
 
 ### Step 2: Open Pull Request
+
 1. Go to GitHub repository
 2. Click "Compare & pull request" or "New pull request"
 3. Select base: `main` (or `release/*`)
@@ -89,29 +92,35 @@ git push origin feature/my-feature
 6. Click "Create pull request"
 
 ### Step 3: Trigger CI Manually
+
 1. In your PR, click the **Checks** tab
 2. You'll see "CI" workflow
 3. Click **"Run workflow"** button
 4. Confirm the run
 
 **Alternative:** From Actions tab
+
 - Go to Actions → CI → Run workflow
 - Select your branch
 - Click "Run workflow"
 
 ### Step 4: Wait for Checks
+
 Monitor the Checks tab:
+
 - ✅ Green checkmark = Passed
 - ❌ Red X = Failed
 - 🟡 Yellow circle = Running
 
 If checks fail:
+
 1. Review the error logs (click on failed check)
 2. Fix the issues in your code
 3. Push the fixes
 4. Trigger CI again (repeat Step 3)
 
 ### Step 5: Approve the PR
+
 1. After all checks pass, approve the PR
 2. Click "Review changes"
 3. Select "Approve"
@@ -120,6 +129,7 @@ If checks fail:
 **Only you (repository owner) can approve PRs to protected branches.**
 
 ### Step 6: Merge
+
 1. Click "Merge pull request"
 2. Confirm the merge
 3. CI will run automatically after merge
@@ -127,11 +137,13 @@ If checks fail:
 ### If You Make Changes After Approval
 
 **What happens:**
+
 - Your approval is **automatically dismissed** (stale approval dismissal)
 - Status checks are **cleared**
 - Merge button is **disabled again**
 
 **What you need to do:**
+
 1. Manually trigger CI again (Step 3)
 2. Wait for all checks to pass (Step 4)
 3. Re-approve the PR (Step 5)
@@ -152,20 +164,25 @@ The easiest way to trigger CI for a PR:
 Required settings for `main` and `release/*` branches:
 
 ✅ **Require a pull request before merging**
+
 - Required approvals: 1
 - Restrict reviewers to repository administrators
 
 ✅ **Dismiss stale pull request approvals when new commits are pushed**
+
 - Automatic re-approval required after changes
 
 ✅ **Require status checks to pass before merging**
+
 - Select: TypeScript Validation, ESLint, Prettier Format Check, Test Suite
 - Require branches to be up to date before merging
 
 ✅ **Do not allow bypassing the above settings**
+
 - Even admins must follow the rules
 
 ✅ **Restrict who can push to matching branches**
+
 - Leave empty to only allow PR merges
 
 ## Cost Optimization
@@ -173,16 +190,19 @@ Required settings for `main` and `release/*` branches:
 The hybrid model optimizes costs by:
 
 ✅ **No automatic runs on every push**
+
 - PRs require manual trigger
 - You control when to run CI for PRs
 - Saves minutes on work-in-progress commits
 
 ✅ **Automatic verification after merge**
+
 - Only runs once after PR is merged
 - Not on every commit during PR development
 - Ensures integrated code is verified
 
 ✅ **Strategic triggering**
+
 - Trigger only when PR is ready for review
 - Not during experimental or draft work
 - Maximum quality with minimum cost
@@ -190,6 +210,7 @@ The hybrid model optimizes costs by:
 ## Common Scenarios
 
 ### Scenario 1: Simple PR
+
 1. Create PR
 2. Trigger CI manually
 3. All checks pass
@@ -197,6 +218,7 @@ The hybrid model optimizes costs by:
 5. CI runs automatically after merge
 
 ### Scenario 2: PR with Failing Checks
+
 1. Create PR
 2. Trigger CI manually
 3. Some checks fail
@@ -206,6 +228,7 @@ The hybrid model optimizes costs by:
 7. Approve and merge
 
 ### Scenario 3: Changes After Approval
+
 1. Create PR
 2. Trigger CI manually, checks pass
 3. Approve PR
@@ -217,6 +240,7 @@ The hybrid model optimizes costs by:
 9. Merge
 
 ### Scenario 4: Emergency Hotfix
+
 1. Create hotfix branch
 2. Create PR to `main` or `release/*`
 3. Trigger CI manually
@@ -227,36 +251,44 @@ The hybrid model optimizes costs by:
 ## Troubleshooting
 
 ### "Can't find Run workflow button"
+
 **Problem:** The button doesn't appear in the Checks tab.
 
 **Solution:**
+
 - Ensure the PR targets `main` or `release/*` branch
 - Try refreshing the page
 - Use Actions tab → CI → Run workflow as alternative
 - Only repository owner can see/use this button
 
 ### "Merge button is disabled"
+
 **Problem:** Can't merge even though checks passed.
 
 **Solution:**
+
 - Ensure all 4 checks show green checkmarks
 - Verify you've approved the PR
 - Check if approval was dismissed (new commits)
 - Ensure branch protection is properly configured
 
 ### "Checks don't appear in settings"
+
 **Problem:** Can't select status checks in branch protection.
 
 **Solution:**
+
 - Trigger CI workflow at least once first
 - Wait for it to complete
 - Then the checks will appear in settings
 - Select all 4 checks
 
 ### "Approval keeps getting dismissed"
+
 **Problem:** Approval disappears after pushing changes.
 
 **Solution:**
+
 - This is intentional (stale approval dismissal)
 - Trigger CI again after changes
 - Wait for checks to pass
@@ -265,6 +297,7 @@ The hybrid model optimizes costs by:
 ## Best Practices
 
 1. **Run checks locally first**
+
    ```bash
    npm run validate && npm run lint && npm run prettier && npm run test
    ```
