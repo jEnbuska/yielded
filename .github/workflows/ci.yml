@@ -192,7 +192,9 @@ jobs:
         run: |
           pnpm audit --audit-level=high --json > "$RUNNER_TEMP/audit.json" || true
           base=()
-          if [ "$WHOLE_TREE" != true ]; then
+          # A base without a lockfile has no dependencies to compare with, so
+          # everything the PR has counts as added.
+          if [ "$WHOLE_TREE" != true ] && git cat-file -e HEAD^1:pnpm-lock.yaml 2>/dev/null; then
             git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
             pnpm --dir "$RUNNER_TEMP/base" audit --audit-level=high --json > "$RUNNER_TEMP/base-audit.json" || true
             base=("$RUNNER_TEMP/base-audit.json")
