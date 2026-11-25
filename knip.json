@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "workspaces": {
+    // Knip finds src/index.ts, the library's public API, from package.json.
+    // Its exports aren't reported; everything else in src/ must be used.
+    ".": {
+      // The reporter the `knip` script passes with --reporter, and the audit
+      // report CI and audit.yml run with node
+      "entry": ["scripts/*.mts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    // Each example is a small consumer of the built package. Knip's Vite,
+    // Playwright and TypeScript plugins find their entry points.
+    "examples/*": {}
+  }
+}

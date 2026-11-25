@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "oxc", "import", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "env": {
+    "es2022": true
+  },
+  "ignorePatterns": ["dist", "coverage"],
+  "rules": {
+    "typescript/no-explicit-any": "off",
+    "typescript/consistent-type-imports": "error",
+    "import/no-duplicates": "error",
+    "eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    // `Yielded.__USE_POLYFILL_ONLY__` is the test switch for the polyfills
+    "eslint/no-underscore-dangle": "off",
+    // The parallel operators' `onNext`/`onDone` hooks are async generators by
+    // contract, and some only collect items without yielding any
+    "eslint/require-yield": "off",
+    // Tests name cases after variables, such as the flow under test
+    "vitest/valid-title": "off"
+  },
+  "overrides": [
+    {
+      // #30 (test quality) turns these back on once the tests are rewritten
+      "files": ["tests/**"],
+      "rules": {
+        "vitest/expect-expect": "off",
+        "vitest/no-conditional-expect": "off",
+        "eslint/no-unreachable": "off",
+        "eslint/no-shadow": "off",
+        "eslint/no-unused-vars": "off"
+      }
+    }
+  ]
+}

@@ -7,10 +7,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "type-check": "tsc --noEmit"
+    "test": "tsc && node dist/index.js"
   },
   "dependencies": {
-    "@jenbuska/yielded": "file:../../"
+    "@jenbuska/yielded": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
