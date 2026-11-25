@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets, handleExpect } from "../utils/createTestSets.ts";
-import "../utils/initTestPolyfills.ts";
 import { delay } from "../utils/delay.ts";
 
 describe("flatMap", () => {

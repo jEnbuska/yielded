@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import { Yielded } from "../../src/index.ts";
 import { createTestSets } from "../utils/createTestSets.ts";
 import { sleep } from "../utils/sleep.ts";
-import "../utils/initTestPolyfills.ts";
 
 describe("toSorted", () => {
   describe("toSorted numbers", () => {
