@@ -9,231 +9,281 @@ on:
 permissions:
   contents: read
 
+# A new push to the same branch or PR cancels the run it makes outdated.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  typecheck:
-    name: Type check
+  # Decides from a PR's changed files which of the jobs below have work to do.
+  # Only PRs skip anything: pushes and manual runs run everything.
+  changes:
+    name: Find the changed files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      checks: ${{ steps.changes.outputs.checks }}
+      format: ${{ steps.changes.outputs.format }}
+      examples: ${{ steps.changes.outputs.examples }}
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      # A PR checks out its merge commit, whose first parent is the tip of the
+      # base branch, so two commits are enough to diff against the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
         with:
-          node-version-file: .nvmrc
-          cache: pnpm
+          persist-credentials: false
+          fetch-depth: 2
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run the type check
-        run: pnpm run typecheck
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run build
-        run: pnpm run build
-
-      - name: Check build output
+      # - checks: everything except docs (Markdown and LICENSE). oxfmt formats
+      #   Markdown, so a Markdown change still runs the format check, alone.
+      # - examples: what the built package or the examples are made from.
+      # - A change to this workflow runs everything.
+      - name: Decide which jobs run
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ ! -f "dist/index.js" ]; then
-            echo "Error: dist/index.js was not generated"
-            exit 1
+          if [ "$EVENT_NAME" != pull_request ]; then
+            printf 'checks=true\nformat=true\nexamples=true\n' | tee -a "$GITHUB_OUTPUT"
+            exit 0
           fi
-          if [ ! -f "dist/index.d.ts" ]; then
-            echo "Error: dist/index.d.ts was not generated"
-            exit 1
-          fi
-          echo "Build output verified successfully"
+          checks=false format=false examples=false
+          while IFS= read -r file; do
+            echo "Changed: $file"
+            case "$file" in
+              .github/workflows/ci.yml) checks=true format=true examples=true ;;
+              *.md) format=true ;;
+              LICENSE) ;;
+              *) checks=true format=true ;;
+            esac
+            case "$file" in
+              *.md) ;;
+              src/* | examples/* | package.json | pnpm-lock.yaml | pnpm-workspace.yaml | tsconfig.json | tsdown.config.ts | .nvmrc) examples=true ;;
+            esac
+          done < <(git diff --name-only HEAD^1 HEAD)
+          printf 'checks=%s\nformat=%s\nexamples=%s\n' "$checks" "$format" "$examples" | tee -a "$GITHUB_OUTPUT"
 
-  lint:
-    name: Lint
+  checks:
+    name: Lint, format, typecheck, test & build
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    timeout-minutes: 15
+    needs: changes
+    # Draft PRs often start with an empty commit, so there's nothing to check.
+    # `!cancelled()` runs it even if `changes` fails: its outputs are then
+    # empty, which isn't 'false', so every step runs.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
 
-      - name: Setup pnpm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Reads the pnpm version from `packageManager` in package.json. It has
+      # to run before setup-node, whose pnpm cache needs pnpm on the PATH.
+      - name: Set up pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
+        if: >-
+          needs.changes.outputs.checks != 'false'
+          || needs.changes.outputs.format != 'false'
         run: pnpm install --frozen-lockfile
 
-      - name: Run oxlint
-        run: pnpm run lint
+      # A PR that only changes Markdown runs the format check and nothing else.
+      - name: Lint
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm lint
 
-  knip:
-    name: Find dead code
+      - name: Find dead code
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm knip
+
+      - name: Format check
+        if: needs.changes.outputs.format != 'false'
+        run: pnpm format:check
+
+      - name: Type check
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm typecheck
+
+      # Runs the suite twice: with the native Iterator helpers and with the
+      # polyfills forced (USE_POLYFILLS=true)
+      - name: Test
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm test
+
+      # tsdown also runs publint and Are The Types Wrong on the built package
+      - name: Build
+        if: needs.changes.outputs.checks != 'false'
+        run: pnpm build
+
+  # The built package, run by examples/node-ts on every Node.js version the
+  # library supports: `engines` in package.json says >=20.4.0, which has no
+  # native Iterator helpers, so the polyfills run there. The tooling needs
+  # the Node.js in .nvmrc, so the example is built with that and only run
+  # with the matrix version.
+  node-example:
+    name: Node example (${{ matrix.node }})
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run knip
-        run: pnpm run knip
-
-  format:
-    name: Format check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run the format check
-        run: pnpm run format:check
-
-  test:
-    name: Test Suite
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests
-        run: pnpm run test
-
-  test-example-node:
-    name: Node TypeScript Example (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
+    timeout-minutes: 10
+    needs: changes
+    # Skipping a matrix job would report one check under its unexpanded name,
+    # and the required `Node example (20.4.0)` would wait forever. So the
+    # matrix always runs, and its steps skip when nothing it checks changed.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
     strategy:
-      matrix:
-        node-version: ["20", "22", "24"]
       fail-fast: false
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      matrix:
+        node: ["20.4.0", "22", "24"]
 
-      - name: Setup pnpm
+    steps:
+      - name: Skip, as nothing the example checks has changed
+        if: needs.changes.outputs.examples == 'false'
+        run: echo "Nothing to test."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.changes.outputs.examples != 'false'
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        if: needs.changes.outputs.examples != 'false'
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
-      # tsdown needs a Node.js that can load its TypeScript config, so the
-      # library and the example are built with the one in .nvmrc, and only
-      # run with the matrix version.
-      - name: Setup Node.js for the build
+      - name: Set up Node.js for the tooling
+        if: needs.changes.outputs.examples != 'false'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
+        if: needs.changes.outputs.examples != 'false'
         run: pnpm install --frozen-lockfile
 
-      - name: Build the library and the Node TypeScript example
-        run: pnpm run test:example:node
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Run the Node TypeScript example
-        working-directory: examples/node-ts
-        run: node dist/index.js
-
-  test-example-react:
-    name: React Vite Example (Playwright)
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build the library and the React example
+      - name: Build the library and the example
+        if: needs.changes.outputs.examples != 'false'
         run: |
-          pnpm run build
-          pnpm --filter react-vite-example run build
+          pnpm build
+          pnpm --filter node-ts-example build
 
-      - name: Install Playwright browsers
-        working-directory: examples/react-vite
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-
-      - name: Run Playwright tests
-        working-directory: examples/react-vite
-        run: pnpm exec playwright test --project=Chromium --project=Firefox --project="WebKit (Safari)"
-
-      - name: Upload Playwright report on failure
-        uses: actions/upload-artifact@v4
-        if: failure()
+      - name: Set up Node.js ${{ matrix.node }}
+        if: needs.changes.outputs.examples != 'false'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          name: playwright-report
-          path: examples/react-vite/playwright-report/
+          node-version: ${{ matrix.node }}
+
+      - name: Run the example
+        if: needs.changes.outputs.examples != 'false'
+        working-directory: examples/node-ts
+        run: |
+          node --version
+          node dist/index.js
+
+  # The built package in a browser app (examples/react-vite), one job per
+  # browser engine, WebKit standing in for Safari.
+  browser-example:
+    name: Browser example (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    # Always runs the matrix, for the reason given on node-example.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0)
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    # Playwright's image already has every browser and the system packages
+    # they need, so nothing runs apt, which hangs when Ubuntu's mirror is
+    # unreachable. Its version must match `@playwright/test` in
+    # pnpm-lock.yaml; the "Check the image's browsers" step fails if it
+    # doesn't. It runs as root, which Playwright's own CI setup does too.
+    # `--ipc=host` keeps Chromium from running out of shared memory.
+    container:
+      image: mcr.microsoft.com/playwright@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579 # v1.65.1-noble
+      options: --ipc=host
+
+    steps:
+      - name: Skip, as nothing the example checks has changed
+        if: needs.changes.outputs.examples == 'false'
+        run: echo "Nothing to test."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.changes.outputs.examples != 'false'
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 3
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      # The image comes with its own Node.js, which isn't the one in .nvmrc
+      - name: Set up Node.js
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 3
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        if: needs.changes.outputs.examples != 'false'
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile
+
+      # Each Playwright version needs its own browser builds. A dry run lists
+      # where the installed Playwright looks for them, without downloading.
+      - name: Check the image's browsers
+        if: needs.changes.outputs.examples != 'false'
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          version=$(pnpm --filter react-vite-example exec playwright --version | cut -d ' ' -f 2)
+          dirs=$(pnpm --filter react-vite-example exec playwright install --dry-run "$BROWSER" | sed -n 's/^ *Install location: *//p')
+          if [ -z "$dirs" ]; then
+            echo "::error::playwright install --dry-run listed no browsers."
+            exit 1
+          fi
+          missing=0
+          for dir in $dirs; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::The Playwright image has no $dir, which Playwright $version needs. Update the image in ci.yml to the version of @playwright/test in pnpm-lock.yaml."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Build the library
+        if: needs.changes.outputs.examples != 'false'
+        run: pnpm build
+
+      # Firefox refuses to run as root when HOME belongs to another user, and
+      # GitHub sets HOME to /github/home, which the runner's user owns.
+      - name: Run the browser tests
+        if: needs.changes.outputs.examples != 'false'
+        env:
+          HOME: /root
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm --filter react-vite-example test --project="$BROWSER"
+
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: examples/react-vite/playwright-report
           retention-days: 7
