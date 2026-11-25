@@ -1,0 +1,24 @@
+# Dependabot version updates for the actions the workflows use. Every action
+# is pinned to a commit SHA with its version in a comment on the same line
+# (`uses: owner/repo@<sha> # vX.Y.Z`), and Dependabot updates both together.
+# npm dependencies aren't listed: `pnpm audit` in CI and audit.yml checks them.
+# https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    # PRs go into dev, like every other PR
+    target-branch: dev
+    schedule:
+      interval: weekly
+    # A new release isn't proposed until it's a week old, so a hijacked
+    # release has time to be noticed before we pin it
+    cooldown:
+      default-days: 7
+    # All action updates in one PR a week
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: Dependabot
