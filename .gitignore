@@ -6,3 +6,6 @@ coverage
 .DS_Store
 *.log
 *.tgz
+.claude/*
+# Project skills are shared; worktrees and local settings aren't
+!.claude/skills/
