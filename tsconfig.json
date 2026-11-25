@@ -1,32 +1,31 @@
 {
+  // Type checking only (`pnpm typecheck`). tsdown builds `dist/` from
+  // src/index.ts, using this file for the declarations.
   "compilerOptions": {
-    "outDir": "./dist",
-    // Environment setup & latest features
+    // The library targets ES2022 runtimes (see tsdown.config.ts), but its
+    // types may use the ESNext lib: the native Iterator helpers are detected
+    // at runtime and polyfilled where missing.
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
-    "allowJs": true,
-
-    // Bundler mode
     "moduleResolution": "bundler",
+    "types": ["node"],
+
+    // Source files import each other with the `.ts` extension, and must stay
+    // plain type-strippable TypeScript.
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "noEmit": true,
 
-    // Best practices
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noImplicitOverride": true
   },
-  // Exclude example projects — they have their own tsconfig and package.json
-  // with dependencies that are not installed at the repository root.
-  "exclude": ["node_modules", "dist", "examples"]
+  // The examples have their own tsconfig and TypeScript version, and check
+  // the built package the way a consumer's project would.
+  "exclude": ["node_modules", "dist", "coverage", "examples"]
 }

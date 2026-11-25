@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: TypeScript Validation
+  typecheck:
+    name: Type check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run TypeScript validation
-        run: pnpm run validate
+      - name: Run the type check
+        run: pnpm run typecheck
 
   build:
     name: Build
