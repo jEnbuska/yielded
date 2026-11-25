@@ -25,6 +25,7 @@ jobs:
       checks: ${{ steps.changes.outputs.checks }}
       format: ${{ steps.changes.outputs.format }}
       examples: ${{ steps.changes.outputs.examples }}
+      deps: ${{ steps.changes.outputs.deps }}
 
     steps:
       # A PR checks out its merge commit, whose first parent is the tip of the
@@ -38,6 +39,7 @@ jobs:
       # - checks: everything except docs (Markdown and LICENSE). oxfmt formats
       #   Markdown, so a Markdown change still runs the format check, alone.
       # - examples: what the built package or the examples are made from.
+      # - deps: any package.json or the lockfile.
       # - A change to this workflow runs everything.
       - name: Decide which jobs run
         id: changes
@@ -45,14 +47,14 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           if [ "$EVENT_NAME" != pull_request ]; then
-            printf 'checks=true\nformat=true\nexamples=true\n' | tee -a "$GITHUB_OUTPUT"
+            printf 'checks=true\nformat=true\nexamples=true\ndeps=true\n' | tee -a "$GITHUB_OUTPUT"
             exit 0
           fi
-          checks=false format=false examples=false
+          checks=false format=false examples=false deps=false
           while IFS= read -r file; do
             echo "Changed: $file"
             case "$file" in
-              .github/workflows/ci.yml) checks=true format=true examples=true ;;
+              .github/workflows/ci.yml) checks=true format=true examples=true deps=true ;;
               *.md) format=true ;;
               LICENSE) ;;
               *) checks=true format=true ;;
@@ -61,8 +63,11 @@ jobs:
               *.md) ;;
               src/* | examples/* | package.json | pnpm-lock.yaml | pnpm-workspace.yaml | tsconfig.json | tsdown.config.ts | .nvmrc) examples=true ;;
             esac
+            case "$file" in
+              package.json | */package.json | pnpm-lock.yaml) deps=true ;;
+            esac
           done < <(git diff --name-only HEAD^1 HEAD)
-          printf 'checks=%s\nformat=%s\nexamples=%s\n' "$checks" "$format" "$examples" | tee -a "$GITHUB_OUTPUT"
+          printf 'checks=%s\nformat=%s\nexamples=%s\ndeps=%s\n' "$checks" "$format" "$examples" "$deps" | tee -a "$GITHUB_OUTPUT"
 
   checks:
     name: Lint, format, typecheck, test & build
@@ -163,6 +168,52 @@ jobs:
       - name: Build
         if: needs.changes.outputs.checks != 'false'
         run: pnpm build
+
+      # Checks the dependencies for known vulnerabilities of high severity or
+      # worse with `pnpm audit`. It runs last, and even after an earlier step
+      # fails, so neither hides the other's result.
+      # - A PR into main, or a push to main, audits the whole tree, whatever
+      #   files changed: this job is required in the main ruleset, so a
+      #   finding blocks the release. Fix it in dev first, in its own PR.
+      # - A PR into dev that changes a package.json or the lockfile fails
+      #   only on what it adds, compared with its base (HEAD^1), so an
+      #   advisory for a dependency it didn't touch doesn't fail it: the
+      #   weekly audit (audit.yml) opens an issue for those.
+      # - Other pushes skip it: they can't be blocked, and the weekly audit
+      #   covers them.
+      - name: Check the dependencies for known vulnerabilities
+        if: >-
+          !cancelled()
+          && (github.base_ref == 'main'
+            || github.ref == 'refs/heads/main'
+            || (github.event_name == 'pull_request' && needs.changes.outputs.deps != 'false'))
+        env:
+          WHOLE_TREE: ${{ github.base_ref == 'main' || github.ref == 'refs/heads/main' }}
+        run: |
+          pnpm audit --audit-level=high --json > "$RUNNER_TEMP/audit.json" || true
+          base=()
+          # A base without a lockfile has no dependencies to compare with, so
+          # everything the PR has counts as added.
+          if [ "$WHOLE_TREE" != true ] && git cat-file -e HEAD^1:pnpm-lock.yaml 2>/dev/null; then
+            git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
+            pnpm --dir "$RUNNER_TEMP/base" audit --audit-level=high --json > "$RUNNER_TEMP/base-audit.json" || true
+            base=("$RUNNER_TEMP/base-audit.json")
+          fi
+          status=0
+          node scripts/audit-report.mts "$RUNNER_TEMP/audit.json" "${base[@]}" > "$RUNNER_TEMP/report.md" || status=$?
+          if [ "$status" = 1 ]; then
+            if [ "$WHOLE_TREE" = true ]; then
+              heading='Known vulnerabilities in the dependencies'
+              message='The dependencies have known vulnerabilities of high severity or worse, listed above and in the job summary. Fix them in dev first, in a PR of their own, then update this branch.'
+            else
+              heading='Known vulnerabilities this PR adds'
+              message='This PR adds dependencies with known vulnerabilities of high severity or worse. Update each one to its fixed version, listed above and in the job summary.'
+            fi
+            cat "$RUNNER_TEMP/report.md"
+            { echo "## $heading"; echo; cat "$RUNNER_TEMP/report.md"; } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::$message"
+          fi
+          exit "$status"
 
   # The built package, run by examples/node-ts on every Node.js version the
   # library supports: `engines` in package.json says >=20.4.0, which has no
