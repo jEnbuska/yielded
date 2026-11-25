@@ -3,7 +3,6 @@ import { ParallelGenerator } from "../../src/generators/parallel/ParallelGenerat
 import { ParallelYielded } from "../../src/parallel/ParallelYielded.ts";
 import { delay } from "../utils/delay.ts";
 import { MockIYieldedParallelGenerator } from "../utils/MockGenerators.ts";
-import "../utils/initTestPolyfills.ts";
 
 describe("ParallelGenerator", () => {
   describe("handleNext", () => {
