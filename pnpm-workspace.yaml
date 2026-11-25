@@ -1,0 +1,10 @@
+# The root package is the library. The examples are consumers of it, linked
+# with `workspace:*`, so they import the built package through its `exports`
+# the way an installed copy would.
+packages:
+  - examples/*
+
+# Dependency install scripts that may run. esbuild's only checks its binary,
+# which the optional platform package already provides.
+allowBuilds:
+  esbuild: false

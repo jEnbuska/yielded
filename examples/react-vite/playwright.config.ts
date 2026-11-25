@@ -14,7 +14,7 @@ export default defineConfig({
 
   // Start the Vite preview server before running tests and shut it down after.
   webServer: {
-    command: "npx vite preview --port 4173 --strictPort",
+    command: "pnpm exec vite preview --port 4173 --strictPort",
     url: "http://localhost:4173",
     reuseExistingServer: false,
     timeout: 15_000,

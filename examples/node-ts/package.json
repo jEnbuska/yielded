@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@jenbuska/yielded": "file:../../"
+    "@jenbuska/yielded": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
